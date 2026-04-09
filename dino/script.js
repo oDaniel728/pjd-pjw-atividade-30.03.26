@@ -219,6 +219,145 @@ const Expander = {
     }
 };
 // [[ ASSETS ]]
+
+const PlaylistService = {
+    /** @type {Map<string, Playlist>} */
+    playlists: new Map(),
+
+    /**
+     * Cria uma playlist
+     * @param {string} name
+     * @param {string[]} audios - nomes do AudioService
+     * @param {PlaylistOptions} [options]
+     */
+    create(name, audios, options = {}) {
+        this.playlists.set(name, {
+            name,
+            audios,
+            index: 0,
+            loop: options.loop ?? false,
+            shuffle: options.shuffle ?? false,
+            playing: false,
+            track: options.track ?? null,
+            current: null
+        });
+    },
+
+    /**
+     * Toca playlist
+     * @param {string} name
+     */
+    play(name) {
+        const pl = this.playlists.get(name);
+        if (!pl) return;
+
+        if (typeof pl.track === "string") {
+            pl.track = AudioService.getAudioTrack(pl.track);
+        }
+
+        if (!pl.track) return;
+
+        pl.playing = true;
+        this._playCurrent(pl);
+    },
+
+    /**
+     * Para playlist
+     * @param {string} name
+     */
+    stop(name) {
+        const pl = this.playlists.get(name);
+        if (!pl) return;
+
+        pl.playing = false;
+
+        if (pl.current) {
+            pl.current.pause();
+            pl.current.currentTime = 0;
+        }
+    },
+
+    /**
+     * Próxima música
+     * @param {string} name
+     */
+    next(name) {
+        const pl = this.playlists.get(name);
+        if (!pl) return;
+
+        this._advance(pl);
+        this._playCurrent(pl);
+    },
+
+    /**
+     * Avança índice
+     * @param {Playlist} pl
+     */
+    _advance(pl) {
+        if (pl.shuffle) {
+            pl.index = Math.floor(Math.random() * pl.audios.length);
+            return;
+        }
+
+        pl.index++;
+
+        if (pl.index >= pl.audios.length) {
+            if (pl.loop) {
+                pl.index = 0;
+            } else {
+                pl.playing = false;
+            }
+        }
+    },
+
+    /**
+     * Toca música atual
+     * @param {Playlist} pl
+     */
+    _playCurrent(pl) {
+        if (!pl.playing) return;
+
+        const name = pl.audios[pl.index];
+        const pool = AudioService.cache.get(name);
+
+        if (!pool || pool.length === 0) return;
+
+        const base = pool[Math.floor(Math.random() * pool.length)];
+        const audio = /** @type {HTMLAudioElement} */ (pl.track.cloneNode());
+
+        audio.src = base.src;
+        audio.currentTime = 0;
+
+        pl.current = audio;
+
+        audio.addEventListener("ended", () => {
+            this._advance(pl);
+            this._playCurrent(pl);
+        });
+
+        audio.play();
+    }
+};
+
+/**
+ * @typedef {Object} Playlist
+ * @property {string} name
+ * @property {string[]} audios
+ * @property {number} index
+ * @property {boolean} loop
+ * @property {boolean} shuffle
+ * @property {boolean} playing
+ * @property {HTMLAudioElement|string|null} track
+ * @property {HTMLAudioElement|null} current
+ */
+
+/**
+ * @typedef {Object} PlaylistOptions
+ * @property {boolean} [loop]
+ * @property {boolean} [shuffle]
+ * @property {HTMLAudioElement|string} [track]
+ */
+
 const AudioService = {
     /** @type { Map<string, any> } */
     config: new Map(),
@@ -430,6 +569,7 @@ const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 
 const sfxTrack = AudioService.getAudioTrack("sfx");
+const bgmTrack = AudioService.getAudioTrack("bgm");
 
 // [[ VARIÁVEIS ]]
 let isGameOver = false;
@@ -462,9 +602,14 @@ board.addEventListener('click', () => {
     handleAction(false);
 });
 
+function startBackgroundMusic() {
+    AudioService.playAudio("bg-song", bgmTrack);
+}
+
 document.addEventListener("load", () => {
     console.log("Carregando dados");
     Session.load();
+    startBackgroundMusic();
 });
 document.addEventListener("beforeunload", () => {
     console.log("Guardando Dados")
