@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Jogo WEB IFAM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --ifam-green: #008037;
+            --ifam-yellow: #FFC72C;
+        }
+        .bg-ifam { background-color: var(--ifam-green) !important; }
+        .btn-primary {
+            background-color: var(--ifam-green);
+            border-color: var(--ifam-green);
+        }
+        .btn-primary:hover {
+            background-color: #006b2d;
+            border-color: #006b2d;
+        }
+        .bg-success {
+            background-color: var(--ifam-green) !important;
+        }
+        .text-primary, .text-ifam {
+            color: var(--ifam-green) !important;
+        }
+        .table-primary {
+            --bs-table-bg: rgba(0, 128, 55, 0.1);
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        #jogo {
+            height: 30rem;
+        }
+    </style>
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-ifam">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-gamepad"></i> Jogo WEB IFAM
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="navHome">
+                            <i class="fas fa-home me-1"></i> Início
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="navJogar">
+                            <i class="fas fa-play me-1"></i> Jogar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="navRanking">
+                            <i class="fas fa-trophy me-1"></i> Ranking
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="d-flex align-items-center">
+                    <div class="user-info me-3">
+                        <div class="user-avatar" id="userAvatar">?</div>
+                        <span class="text-white" id="userName">Carregando...</span>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm" id="btnLogout">
+                        <i class="fas fa-sign-out-alt me-1"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Layout com Sidebar -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show" id="sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-section="home">
+                                <i class="fas fa-home"></i> Início
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="perfil">
+                                <i class="fas fa-user"></i> Meu Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="jogar">
+                                <i class="fas fa-gamepad"></i> Jogar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="ranking">
+                                <i class="fas fa-trophy"></i> Ranking
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="historico">
+                                <i class="fas fa-history"></i> Histórico
+                            </a>
+                        </li>
+                        <hr class="text-white">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="config">
+                                <i class="fas fa-cog"></i> Configurações
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo Principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                
+                <!-- Seção Início -->
+                <section id="section-home" class="section-content">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-home me-2"></i>Painel do Jogo
+                        </h1>
+                    </div>
+
+                    <!-- Cards de Estatísticas -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card stat-card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Pontuação</h6>
+                                            <h2 class="card-title mb-0" id="userPontuacao">0</h2>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Nível</h6>
+                                            <h2 class="card-title mb-0" id="userNivel">1</h2>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="fas fa-level-up-alt"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card bg-warning text-dark">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2">Posição no Ranking</h6>
+                                            <h2 class="card-title mb-0">#<span id="userPosicao">-</span></h2>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="fas fa-medal"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botão Jogar -->
+                    <div class="card mb-4">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-gamepad display-1 text-primary mb-3"></i>
+                            <h2>Pronto para Jogar?</h2>
+                            <p class="text-muted">Clique no botão abaixo para começar uma nova partida!</p>
+                            <button class="btn btn-primary btn-lg px-5" id="btnIniciarJogo">
+                                <i class="fas fa-play me-2"></i>Iniciar Jogo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Últimas Partidas -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Suas Últimas Partidas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="historicoPartidas">
+                                <p class="text-muted text-center">Nenhuma partida ainda. Comece a jogar!</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção Ranking -->
+                <section id="section-ranking" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-trophy me-2"></i>Ranking dos Melhores
+                        </h1>
+                        <button class="btn btn-outline-primary" id="btnAtualizarRanking">
+                            <i class="fas fa-sync-alt me-1"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <div class="table-ranking">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="80">Posição</th>
+                                    <th>Jogador</th>
+                                    <th width="150">Pontuação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankingBody">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Seção Perfil -->
+                <section id="section-perfil" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-user me-2"></i>Meu Perfil
+                        </h1>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <img src="https://ui-avatars.com/api/?name=Usuario&background=667eea&color=fff&size=150" 
+                                         class="rounded-circle mb-3" id="perfilAvatar" width="150" height="150">
+                                    <h3 id="perfilNome">Nome do Usuário</h3>
+                                    <p class="text-muted" id="perfilEmail">email@email.com</p>
+                                    <span class="badge bg-primary" id="perfilNivel">Nível 1</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Estatísticas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <h2 class="text-primary" id="perfilPontuacao">0</h2>
+                                            <p class="text-muted">Pontuação Total</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <h2 class="text-success" id="perfilPartidas">0</h2>
+                                            <p class="text-muted">Partidas Jogadas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Editar Perfil</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="formEditarPerfil">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="perfilNomeInput">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i> Salvar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Jogo Simples (Jogo da Memória) -->
+    <div class="modal fade" id="modalJogo" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <!--MODAL DO JOGO PRINCIPAL-->
+                    <h5 class="modal-title">
+                        <i class="fas fa-brain me-2"></i>Jogo do Dinossauro
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="fecharJogo"></button>
+                </div>
+                <div class="modal-body" id="jogo">
+                        <iframe src="dino/index.html"></iframe>
+
+                    <!-- <div class="text-center mb-3"> -->
+                    <!--     <span class="badge bg-primary fs-5 me-2"> -->
+                    <!--         <i class="fas fa-clock me-1"></i> Tempo: <span id="tempoJogo">0</span>s -->
+                    <!--     </span> -->
+                    <!--     <span class="badge bg-success fs-5"> -->
+                    <!--         <i class="fas fa-check me-1"></i> Pares: <span id="paresJogo">0</span>/8 -->
+                    <!--     </span> -->
+                    <!-- </div> -->
+                        <!--MODAL DO JOGO PRINCIPAL-->
+                    
+                    <!-- <div class="jogo-memoria" id="jogoMemoria"> -->
+                    <!--     <!-- Cartas serão geradas via JS --> -->
+                    <!-- </div> -->
+                    
+                    <div id="jogoCompleto" class="text-center d-none py-4">
+                        <i class="fas fa-trophy display-1 text-warning"></i>
+                        <h3 class="mt-3">Parabéns!</h3>
+                        <p>Você completou o jogo em <span id="tempoFinal">0</span> segundos!</p>
+                        <p class="text-muted">Pontuação ganha: +<span id="pontuacaoGanha">100</span></p>
+                        <button class="btn btn-primary" data-bs-dismiss="modal">
+                            <i class="fas fa-check me-1"></i> Continuar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="spinner-container d-none">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, update, get, onValue, push, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // ============================================
+        // CONFIGURAÇÃO DO FIREBASE - SUBSTITUA OS VALORES
+        // ============================================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBZGph8g79sGTWu5CVynTpeXaUOar-wn8",
+            authDomain: "jogos-web-ifam-login-ac5da.firebaseapp.com",
+            databaseURL: "https://jogos-web-ifam-login-ac5da-default-rtdb.firebaseio.com",
+            projectId: "jogos-web-ifam-login-ac5da",
+            storageBucket: "jogos-web-ifam-login-ac5da.firebasestorage.app",
+            messagingSenderId: "267249166179",
+            appId: "1:267249166179:web:7b06913ce99b86b4489556",
+            measurementId: "G-F0LSKZE1W2"
+        };
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let usuarioAtual = null;
+        let dadosUsuario = null;
+        let timerJogo = null;
+        let tempoJogo = 0;
+        let paresEncontrados = 0;
+        let cartaSelecionada = null;
+        let bloqueado = false;
+
+        // ============================================
+        // VERIFICAÇÃO DE AUTENTICAÇÃO
+        // ============================================
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // Não está logado, redirecionar para login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            usuarioAtual = user;
+            
+            // Buscar dados do usuário
+            await carregarDadosUsuario(user.uid);
+            
+            // Carregar ranking em tempo real
+            carregarRanking(user.uid);
+            
+            // Carregar histórico
+            carregarHistorico(user.uid);
+        });
+
+        // ============================================
+        // CARREGAR DADOS DO USUÁRIO
+        // ============================================
+
+        async function carregarDadosUsuario(uid) {
+            try {
+                const snapshot = await get(ref(db, 'usuarios/' + uid));
+                
+                if (snapshot.exists()) {
+                    dadosUsuario = snapshot.val();
+                    
+                    // Atualizar interface
+                    document.getElementById('userName').textContent = dadosUsuario.nome;
+                    document.getElementById('userPontuacao').textContent = dadosUsuario.pontuacao || 0;
+                    document.getElementById('userNivel').textContent = dadosUsuario.nivel || 1;
+                    
+                    // Avatar
+                    const iniciais = dadosUsuario.nome.charAt(0).toUpperCase();
+                    document.getElementById('userAvatar').textContent = iniciais;
+                    
+                    // Seção Perfil
+                    document.getElementById('perfilNome').textContent = dadosUsuario.nome;
+                    document.getElementById('perfilEmail').textContent = dadosUsuario.email;
+                    document.getElementById('perfilNivel').textContent = 'Nível ' + (dadosUsuario.nivel || 1);
+                    document.getElementById('perfilPontuacao').textContent = dadosUsuario.pontuacao || 0;
+                    document.getElementById('perfilNomeInput').value = dadosUsuario.nome;
+                    
+                    // Avatar no perfil
+                    const avatarUrl = dadosUsuario.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(dadosUsuario.nome)}&background=667eea&color=fff`;
+                    document.getElementById('perfilAvatar').src = avatarUrl;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+            }
+        }
+
+        // ============================================
+        // RANKING EM TEMPO REAL
+        // ============================================
+        
+        function carregarRanking(userUid) {
+            const rankingRef = ref(db, 'ranking');
+            
+            onValue(rankingRef, (snapshot) => {
+                const dados = snapshot.val();
+                
+                if (!dados) {
+                    document.getElementById('rankingBody').innerHTML = '<tr><td colspan="3" class="text-center py-4">Nenhum jogador no ranking ainda!</td></tr>';
+                    return;
+                }
+                
+                // Converter para array e ordenar
+                const lista = Object.entries(dados)
+                    .map(([uid, item]) => ({ uid, ...item }))
+                    .sort((a, b) => b.pontuacao - a.pontuacao);
+                
+                // Encontrar posição do usuário
+                const posicaoUsuario = lista.findIndex(item => item.uid === userUid);
+                document.getElementById('userPosicao').textContent = posicaoUsuario >= 0 ? posicaoUsuario + 1 : '-';
+                
+                // Renderizar tabela
+                let html = '';
+                lista.slice(0, 20).forEach((item, index) => {
+                    let medal = '';
+                    if (index === 0) medal = '<i class="fas fa-medal medal gold"></i>';
+                    else if (index === 1) medal = '<i class="fas fa-medal medal silver"></i>';
+                    else if (index === 2) medal = '<i class="fas fa-medal medal bronze"></i>';
+                    else medal = index + 1;
+                    
+                    const isCurrentUser = item.uid === userUid ? 'table-primary' : '';
+                    
+                    html += `<tr class="${isCurrentUser}">
+                        <td>${medal}</td>
+                        <td>${item.nome} ${item.uid === userUid ? '(você)' : ''}</td>
+                        <td><strong>${item.pontuacao}</strong></td>
+                        <td><strong>${item.pontuacao_maxima}</strong></td>
+                    </tr>`;
+                });
+                
+                document.getElementById('rankingBody').innerHTML = html;
+            });
+        }
+
+        // ============================================
+        // HISTÓRICO DE PARTIDAS
+        // ============================================
+
+        async function carregarHistorico(uid) {
+            try {
+                const snapshot = await get(ref(db, 'historico/' + uid));
+                
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    const partidas = Object.values(dados).slice(-5).reverse();
+                    
+                    if (partidas.length > 0) {
+                        let html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Data</th><th>Pontuação</th></tr></thead><tbody>';
+                        
+                        partidas.forEach(partida => {
+                            const data = new Date(partida.data).toLocaleDateString('pt-BR');
+                            html += `<tr><td>${data}</td><td><strong>${partida.pontuacao}</strong></td></tr>`;
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        document.getElementById('historicoPartidas').innerHTML = html;
+                        document.getElementById('perfilPartidas').textContent = partidas.length;
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar histórico:", error);
+            }
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error("Erro ao fazer logout:", error);
+            }
+        });
+
+        // ============================================
+        // NAVEGAÇÃO
+        // ============================================
+
+        document.querySelectorAll('[data-section]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                const section = e.currentTarget.dataset.section;
+                
+                // Atualizar menu ativo
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                
+                // Mostrar seção correta
+                document.querySelectorAll('.section-content').forEach(s => s.classList.add('d-none'));
+                document.getElementById('section-' + section).classList.remove('d-none');
+            });
+        });
+
+        /** @type { HTMLDivElement }  */
+        const jogo = document.getElementById("jogo")
+
+        // // ============================================
+        // // JOGO DA MEMÓRIA
+        // // ============================================
+        //
+        // const symbols = ['🎮', '🎯', '🎲', '🎸', '🎨', '🏆', '⭐', '🎪'];
+        // let cartas = [];
+        //
+        function iniciarJogo() {
+            // Resetar variáveis
+            // tempoJogo = 0;
+            // paresEncontrados = 0;
+            // cartaSelecionada = null;
+            // bloqueado = false;
+            
+            // Embaralhar cartas
+            // cartas = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+            
+            // Renderizar cartas
+            // const jogoDiv = document.getElementById('jogoMemoria');
+            // jogoDiv.innerHTML = '';
+            // jogoDiv.className = 'jogo-memoria';
+            // jogoDiv.style.display = 'grid';
+            // jogoDiv.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            // jogoDiv.style.gap = '10px';
+            
+            // cartas.forEach((symbol, index) => {
+            //     const carta = document.createElement('div');
+            //     carta.className = 'carta';
+            //     carta.dataset.index = index;
+            //     carta.dataset.symbol = symbol;
+            //     carta.innerHTML = '<div class="carta-front">?</div><div class="carta-back">' + symbol + '</div>';
+            //     carta.addEventListener('click', () => virarCarta(carta));
+            //     jogoDiv.appendChild(carta);
+            // });
+            
+            // Esconder resultado
+            // document.getElementById('jogoCompleto').classList.add('d-none');
+            // jogoDiv.classList.remove('d-none');
+            
+            // Atualizar contadores
+            // document.getElementById('paresJogo').textContent = '0';
+            // document.getElementById('tempoJogo').textContent = '0';
+            
+            // Iniciar timer
+            // if (timerJogo) clearInterval(timerJogo);
+            // timerJogo = setInterval(() => {
+            //     tempoJogo++;
+            //     document.getElementById('tempoJogo').textContent = tempoJogo;
+            // }, 1000);
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('modalJogo'));
+            modal.show();
+        }
+        //
+        // function virarCarta(carta) {
+        //     if (bloqueado) return;
+        //     if (carta.classList.contains('virada')) return;
+        //     
+        //     carta.classList.add('virada');
+        //     
+        //     if (!cartaSelecionada) {
+        //         cartaSelecionada = carta;
+        //         return;
+        //     }
+        //     
+        //     // Verificar par
+        //     if (carta.dataset.symbol === cartaSelecionada.dataset.symbol) {
+        //         // Encontrou par
+        //         paresEncontrados++;
+        //         document.getElementById('paresJogo').textContent = paresEncontrados;
+        //         cartaSelecionada = null;
+        //         
+        //         if (paresEncontrados === 8) {
+        //             finalizarJogo();
+        //         }
+        //     } else {
+        //         // Não encontrou
+        //         bloqueado = true;
+        //         setTimeout(() => {
+        //             carta.classList.remove('virada');
+        //             cartaSelecionada.classList.remove('virada');
+        //             cartaSelecionada = null;
+        //             bloqueado = false;
+        //         }, 1000);
+        //     }
+        // }
+        //
+        // async function finalizarJogo() {
+        //     clearInterval(timerJogo);
+        //     
+        //     // Calcular pontuação (base 100 - tempo)
+        //     const pontuacao = Math.max(10, 100 - tempoJogo * 2);
+        //     
+        //     document.getElementById('tempoFinal').textContent = tempoJogo;
+        //     document.getElementById('pontuacaoGanha').textContent = pontuacao;
+        //     
+        //     document.getElementById('jogoMemoria').classList.add('d-none');
+        //     document.getElementById('jogoCompleto').classList.remove('d-none');
+        //     
+        //     // Salvar pontuação
+        //     if (dadosUsuario && usuarioAtual) {
+        //         const novaPontuacao = (dadosUsuario.pontuacao || 0) + pontuacao;
+        //         const novoNivel = Math.floor(novaPontuacao / 500) + 1;
+        //         
+        //         // Atualizar usuário
+        //         await update(ref(db, 'usuarios/' + usuarioAtual.uid), {
+        //             pontuacao: novaPontuacao,
+        //             nivel: novoNivel
+        //         });
+        //         
+        //         // Atualizar ranking
+        //         await set(ref(db, 'ranking/' + usuarioAtual.uid), {
+        //             nome: dadosUsuario.nome,
+        //             pontuacao: novaPontuacao
+        //         });
+        //         
+        //         // Salvar no histórico
+        //         await push(ref(db, 'historico/' + usuarioAtual.uid), {
+        //             pontuacao: pontuacao,
+        //             data: new Date().toISOString(),
+        //             tempo: tempoJogo
+        //         });
+        //         
+        //         // Atualizar interface
+        //         dadosUsuario.pontuacao = novaPontuacao;
+        //         dadosUsuario.nivel = novoNivel;
+        //         document.getElementById('userPontuacao').textContent = novaPontuacao;
+        //         document.getElementById('userNivel').textContent = novoNivel;
+        //     }
+        // }
+
+        // Botão iniciar jogo
+        // document.getElementById('btnIniciarJogo').addEventListener('click', iniciarJogo);
+        document.getElementById('btnIniciarJogo').addEventListener('click', () => {
+            window.location.href = "/dino/index.html";
+        })
+
+        // Botão atualizar ranking
+        document.getElementById('btnAtualizarRanking').addEventListener('click', () => {
+            if (usuarioAtual) {
+                carregarRanking(usuarioAtual.uid);
+            }
+        });
+
+        // Editar perfil
+        document.getElementById('formEditarPerfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const novoNome = document.getElementById('perfilNomeInput').value;
+            
+            if (novoNome && novoNome !== dadosUsuario.nome && usuarioAtual) {
+                await update(ref(db, 'usuarios/' + usuarioAtual.uid), {
+                    nome: novoNome
+                });
+                
+                // Atualizar ranking também
+                const snapshot = await get(ref(db, 'ranking/' + usuarioAtual.uid));
+                if (snapshot.exists()) {
+                    await update(ref(db, 'ranking/' + usuarioAtual.uid), {
+                        nome: novoNome
+                    });
+                }
+                
+                dadosUsuario.nome = novoNome;
+                document.getElementById('userName').textContent = novoNome;
+                document.getElementById('perfilNome').textContent = novoNome;
+                
+                alert('Perfil atualizado com sucesso!');
+            }
+        });
+    </script>
+
+    <style>
+        .jogo-memoria {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .carta {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .carta > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border-radius: 8px;
+            transition: transform 0.5s;
+            backface-visibility: hidden;
+        }
+        
+        .carta-front {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: rotateY(0deg);
+        }
+        
+        .carta-back {
+            background: white;
+            border: 2px solid #667eea;
+            transform: rotateY(180deg);
+        }
+        
+        .carta.virada .carta-front {
+            transform: rotateY(180deg);
+        }
+        
+        .carta.virada .carta-back {
+            transform: rotateY(360deg);
+        }
+    </style>
+</body>
+</html>

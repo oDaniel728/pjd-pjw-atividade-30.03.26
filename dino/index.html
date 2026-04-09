@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+    <!-- AUDIOS -->
+    <audio track name="sfx"></audio>
+    <audio track name="bgm"></audio>
+
+    <div class="placar">
+        <p><span class="score-show">...</span><p>HI: <span id="max-score">.....</span> </p> 
+    </div>
+
+    <div class="gameOverMsg hidden">
+        <h1>Game Over</h1>
+        <p>Pontuação: <span class="score-show-gameover">0</span></p>
+    </div>
+
+
+    <div id="game-board">
+        <div class="nuvem">&#9729</div>
+        <div class="dino">🦖</div>
+        <!-- <div class="cacto">🌵</div> -->
+        <div class="chao"></div>
+    </div>
+
+    <!-- <div> -->
+    <!--     <button id="btn-start"></button> -->
+    <!--     <p class="status"></p> -->
+    <!-- </div> -->
+    <!--  -->
+    <!-- <nav class="menu-jogo"> -->
+    <!--     <a href="#">&#9654 JOGAR</a> -->
+    <!--     <a href="#">&#63 Ajuda</a> -->
+    <!-- </nav> -->
+    <script src="script.js" type="module"></script>
+</body>
+</html>
