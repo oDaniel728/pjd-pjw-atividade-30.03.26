@@ -241,6 +241,7 @@ const PlaylistService = {
             track: options.track ?? null,
             current: null
         });
+        return name;
     },
 
     /**
@@ -603,7 +604,17 @@ board.addEventListener('click', () => {
 });
 
 function startBackgroundMusic() {
-    AudioService.playAudio("bg-song", bgmTrack);
+    bgmTrack.volume = .2;
+
+    const bgmPlaylist = PlaylistService.create(
+        "bgm",
+        ["bg-song"],
+        {
+            loop: true,
+            track: bgmTrack
+        }
+    );
+    PlaylistService.play(bgmPlaylist);
 }
 
 document.addEventListener("load", () => {
