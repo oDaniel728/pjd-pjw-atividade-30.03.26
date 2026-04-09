@@ -514,16 +514,11 @@ function handleAction(spacePressed) {
 function handleGameOver() {
     isGameOver = true;
     gameStarted = false;
-    // clearInterval(scoreInterval);
-    // clearTimeout(cactusTimeout);
-    // clearInterval(checkCollisionInterval);
     
     let score = Session.score;
     if (score !== 0) {
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
-    // Session.score = 0;
-    // Session.save();
     Session.rounds++;
     document
         .querySelectorAll(".nuvem")
@@ -545,24 +540,17 @@ function jump() {
     if (jumping) return;
     jumping = true;
 
-    // const copy = /** @type { HTMLAudioElement } */(sfx_coil.cloneNode());
-    // copy.currentTime = 0;
-    // copy.play();
     AudioService.playAudio("jump", sfxTrack);
 
     dino.classList.remove('jump');
-    dino.classList.remove('rotate');
 
-    // força o navegador a "recalcular"
     void dino.offsetWidth;
 
     dino.classList.add('jump');
-    // dino.classList.add('rotate');
 
     setTimeout (() => {
         jumping = false;
         dino.classList.remove('jump');
-        // dino.classList.remove('rotate');
     }, 500);
 }
 
@@ -604,15 +592,6 @@ function spawnCactus() {
         cactus.classList.add("cacto");
         cactus.innerText = '🌵';
         board.appendChild(cactus);
-
-        // const cactusTimeoutHandler = () => {
-        //     if (cactus.classList.contains("paused")) {
-        //         cactusTimeout = setTimeout( cactusTimeoutHandler, 10);
-        //         return; 
-        //     }
-        //     if (board.contains(cactus)) cactus.remove();
-        // }
-        // cactusTimeout = setTimeout( cactusTimeoutHandler , 2000);
 
     }
     const randomTime = Math.random() * 1500 + 1000;
