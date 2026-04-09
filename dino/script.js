@@ -222,40 +222,53 @@ const Expander = {
 const AudioService = {
     /** @type { Map<string, any> } */
     config: new Map(),
+
+    /** @type { Map<string, HTMLAudioElement[]> } */
+    cache: new Map(),
+
     /**
      * Pega um canal de áudio
-     *
-     * @param {string} name - Nome do canal.
-     * @returns {HTMLAudioElement} - Tag do canal 
+     * @param {string} name
+     * @returns {HTMLAudioElement|null}
      */
     getAudioTrack(name) {
         const el = document.querySelector(`audio[track][name="${name}"]`);
         if (!el) {
             console.warn(`Audio track ${name} not found in DOM.`);
             return null;
-        };
+        }
         return el;
     },
 
+    /**
+     * Carrega config JSON
+     * @returns {Promise<Record<string, string|string[]>>}
+     */
     async getAudioConfig() {
         const res = await fetch("./assets/soundconfig.json");
-        if (!res.ok) {
-            throw new Error(`HTTP Error: ${res.status}`);
-        }
-        const data = await res.json();
-        return data;        
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
     },
+
+    /**
+     * Atualiza config e pré-carrega áudios
+     * @returns {Promise<void>}
+     */
     async updateConfig() {
         this.config = new Map(
             Object.entries(await this.getAudioConfig())
         );
-        console.log(this.config)
+
+        await this.preloadAll();
     },
-    getAudioPath(name) {
-        if (!this.config.has(name)) {
-            console.warn(`Audio ${name} not found in config.`);
-            return null;
-        }
+
+    /**
+     * Resolve todos os caminhos possíveis de um áudio
+     * @param {string} name
+     * @returns {string[]}
+     */
+    resolvePaths(name) {
+        if (!this.config.has(name)) return [];
 
         const value = this.config.get(name);
 
@@ -264,42 +277,85 @@ const AudioService = {
 
         if (typeof value === "string") {
             pool = Expander.expand(value);
-        } 
-        else if (Array.isArray(value)) {
+        } else if (Array.isArray(value)) {
             for (const entry of value) {
-                const expanded = Expander.expand(entry);
-                pool.push(...expanded);
+                pool.push(...Expander.expand(entry));
             }
         }
 
-        if (pool.length === 0) {
-            console.warn(`No audio resolved for ${name}`);
-            return null;
+        return pool.map(p => `./assets/sounds/${p}`);
+    },
+
+    /**
+     * Pré-carrega TODOS os áudios
+     * @returns {Promise<void>}
+     */
+    async preloadAll() {
+        /** @type {Promise<void>[]} */
+        const tasks = [];
+
+        for (const key of this.config.keys()) {
+            tasks.push(this.preload(key));
         }
 
-        const random = pool[Math.floor(Math.random() * pool.length)];
-        return `./assets/sounds/${random}`;
+        await Promise.all(tasks);
+        console.log("Áudios pré-carregados");
     },
-    
-    
-    /**
-     * Toca um áudio em uma track
-     *
-     * @async
-     * @param {string} name - Nome do áudio nas configurações
-     * @param {string | HTMLAudioElement} track - Nome da track
-     * @returns {void} 
-     */
-    async playAudio(name, track) {
-        const path = this.getAudioPath(name);
 
-        if (typeof track === "string")
+    /**
+     * Pré-carrega um grupo de áudio
+     * @param {string} name
+     * @returns {Promise<void>}
+     */
+    async preload(name) {
+        const paths = this.resolvePaths(name);
+
+        /** @type {HTMLAudioElement[]} */
+        const audios = [];
+
+        for (const path of paths) {
+            const audio = new Audio();
+            audio.src = path;
+            audio.preload = "auto";
+
+            // força carregamento
+            const p = new Promise((resolve) => {
+                audio.addEventListener("canplaythrough", () => resolve(), { once: true });
+                audio.addEventListener("error", () => resolve(), { once: true });
+            });
+
+            audio.load();
+            await p;
+
+            audios.push(audio);
+        }
+
+        this.cache.set(name, audios);
+    },
+
+    /**
+     * Toca um áudio (sem rede, usando cache)
+     * @param {string} name
+     * @param {string|HTMLAudioElement} track
+     * @returns {void}
+     */
+    playAudio(name, track) {
+        const pool = this.cache.get(name);
+
+        if (!pool || pool.length === 0) {
+            console.warn(`Audio ${name} não está carregado.`);
+            return;
+        }
+
+        if (typeof track === "string") {
             track = this.getAudioTrack(track);
-        
-        const audioElement = /** @type { HTMLAudioElement } */ (track.cloneNode());
-        
-        audioElement.src = path;
-        
+        }
+
+        const base = pool[Math.floor(Math.random() * pool.length)];
+
+        const audioElement = /** @type {HTMLAudioElement} */ (track.cloneNode());
+
+        audioElement.src = base.src;
         audioElement.currentTime = 0;
         audioElement.play();
     }
