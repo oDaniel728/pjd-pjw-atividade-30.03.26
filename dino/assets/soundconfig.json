@@ -1,7 +1,7 @@
 {
     "coil": "coil.mp3",
     "jump": [ "jump-sounds/sfx1..14.mp3" ],
-    "death": "death.ogg",
-    "hit": "hit.ogg",
-    "bg-song": [ "bg-songs/song1..4.ogg" ]
+    "death": "death.mp3",
+    "hit": "hit.mp3",
+    "bg-song": [ "bg-songs/song1..4.mp3" ]
 }

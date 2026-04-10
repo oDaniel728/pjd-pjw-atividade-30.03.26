@@ -1,3 +1,9 @@
+:root {
+    --background-color: #87CEEB;;
+    --ground-color1: #C4A95A;
+    --ground-color2: #8B7355;
+}
+
 /* =========================================================
    RESET BÁSICO
    ---------------------------------------------------------
@@ -33,7 +39,7 @@ body {
 #game-board {
     width: 800px;                        /* Largura fixa da área do jogo */
     height: 300px;                       /* Altura fixa da área do jogo */
-    background-color: #87CEEB;         /* Cor azul-céu para o fundo */
+    background-color: var(--background-color);/* Cor azul-céu para o fundo */
     position: relative;                  /* Referência para elementos posicionados com absolute */
     overflow: hidden;                    /* Esconde o que sair fora da área do jogo */
     margin: 20px auto;                   /* Espaço externo em cima/baixo e centralização horizontal */
@@ -53,8 +59,8 @@ body {
     left: 0;                         /* Começa na borda esquerda */
     right: 0;                        /* Vai até a borda direita */
     height: 50px;                    /* Altura do chão */
-    background-color: #C4A95A;       /* Cor de terra */
-    border-top: 4px solid #8B7355;   /* Linha superior para destacar o solo */
+    background-color: var(--ground-color1);       /* Cor de terra */
+    border-top: 4px solid var(--ground-color2);   /* Linha superior para destacar o solo */
 }
 
 /* =========================================================
@@ -81,13 +87,13 @@ Faz o dinossauro subir e depois voltar ao chão.
 
 @keyframes rotate-anim {
     0% {
-        transform: rotate(0deg);
+        transform: scaleX(-1) rotate(0deg);
     }
     80% {
-        transform: rotate(360deg);
+        transform: scaleX(-1) rotate(-360deg);
     }
     100% {
-        transform: rotate(360deg);
+        transform: scaleX(-1) rotate(-360deg);
     }
 }
 
@@ -126,7 +132,7 @@ Faz o dinossauro subir e depois voltar ao chão.
     font-size: 45px;                           /* Tamanho do caractere/emoji do cacto */
     line-height: 1;                            /* Remove espaçamento vertical extra */
     z-index: 1;                                /* Fica atrás do dinossauro */
-    animation: mover-cacto 2s linear infinite; /* Movimento contínuo do cacto */
+    animation: mover-cacto linear forwards; /* Movimento contínuo do cacto */
 }
 
 /* =========================================================
@@ -160,7 +166,10 @@ Faz o dinossauro subir e depois voltar ao chão.
     color: #fff;                               /* Cor branca */
     opacity: 0.8;                              /* Leve transparência */
     z-index: 0;                                /* Fica mais ao fundo */
-    animation: mover-nuvem 15s linear infinite;/* Movimento contínuo e lento */
+    animation: 
+        mover-nuvem linear forwards,
+        mover-nuvem-y 4s linear infinite;
+    ;/* Movimento contínuo e lento */
 }
 
 /* =========================================================
@@ -171,6 +180,17 @@ Faz o dinossauro subir e depois voltar ao chão.
 @keyframes mover-nuvem {
     0%   { right: -100px; } /* Início fora da tela */
     100% { right: 900px; }  /* Vai até ultrapassar todo o palco */
+}
+@keyframes mover-nuvem-y {
+    0% {
+        top: 0;
+    }
+    50% {
+        top: 20px;
+    }
+    100% {
+        top: 0;
+    }
 }
 
 /* =========================================================

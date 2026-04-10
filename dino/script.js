@@ -32,18 +32,55 @@ onAuthStateChanged(auth, async (user) => {
 
     await carregarDadosUsuario(user.uid);
 });
+async function saveUserData() {
+    if (!usuarioAtual) return;
 
+    const uid = usuarioAtual.uid;
+
+    const total = Session.total_score;
+    const max = Session.max_score;
+    const nivel = Math.floor(total / 500) + 1;
+
+    // 1. dados principais do usuário
+    await set(ref(db, `usuarios/${uid}`), {
+        nome: dadosUsuario.nome,
+        total_score: total,
+        max_score: max,
+        nivel: nivel,
+        rounds: Session.rounds,
+    });
+
+    // 2. ranking separado (evita bagunça no users)
+    await set(ref(db, `ranking/${uid}`), {
+        nome: dadosUsuario.nome,
+        total_score: total,
+        max_score: max,
+        nivel: nivel,
+        rounds: Session.rounds,
+    });
+
+    // 3. histórico (sempre append)
+    await push(ref(db, `historico/${uid}`), {
+        score: Session.score,
+        total_score: total,
+        max_score: max,
+        nivel: nivel,
+        rounds: Session.rounds,
+        data: new Date().toISOString()
+    });
+}
 async function carregarDadosUsuario(uid) {
-    try {
-        const snapshot = await get(ref(db, 'usuarios/' + uid));
+    const snapshot = await get(ref(db, `usuarios/${uid}`));
 
-        // if (snapshot.exists()) {
-            dadosUsuario = snapshot.val();
-        // }
-        Session.max_score = dadosUsuario.pontuacao_maxima
-    } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-    }
+    if (!snapshot.exists()) return;
+
+    const data = snapshot.val();
+
+    dadosUsuario = data;
+
+    Session.total_score = data.total_score || 0;
+    Session.max_score = data.max_score || 0;
+    Session.rounds = data.rounds || 0;
 }
 
 // [[ EXPANDER ]]
@@ -220,14 +257,196 @@ const Expander = {
 };
 // [[ ASSETS ]]
 
+const AudioService = {
+    /** @type {Map<string, any>} */
+    config: new Map(),
+
+    /** @type {Map<string, HTMLAudioElement[]>} */
+    cache: new Map(),
+
+    /** @type {Map<string, Set<HTMLAudioElement>>} */
+    activeByTrack: new Map(),
+
+    /**
+     * Pega um canal de áudio
+     * @param {string} name
+     * @returns {HTMLAudioElement|null}
+     */
+    getAudioTrack(name) {
+        const el = document.querySelector(`audio[track][name="${name}"]`);
+        if (!el) {
+            console.warn(`Audio track ${name} not found.`);
+            return null;
+        }
+        return el;
+    },
+
+    /**
+     * Carrega config JSON
+     * @returns {Promise<Record<string, string|string[]>>}
+     */
+    async getAudioConfig() {
+        const res = await fetch("./assets/soundconfig.json");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    },
+
+    /**
+     * Inicializa config + preload
+     * @returns {Promise<void>}
+     */
+    async updateConfig() {
+        this.config = new Map(
+            Object.entries(await this.getAudioConfig())
+        );
+
+        await this.preloadAll();
+    },
+
+    /**
+     * Resolve paths
+     * @param {string} name
+     * @returns {string[]}
+     */
+    resolvePaths(name) {
+        if (!this.config.has(name)) return [];
+
+        const value = this.config.get(name);
+
+        /** @type {string[]} */
+        let pool = [];
+
+        if (typeof value === "string") {
+            pool = Expander.expand(value);
+        } else {
+            for (const entry of value) {
+                pool.push(...Expander.expand(entry));
+            }
+        }
+
+        return pool.map(p => `./assets/sounds/${p}`);
+    },
+
+    /**
+     * Preload geral
+     * @returns {Promise<void>}
+     */
+    async preloadAll() {
+        const tasks = [];
+
+        for (const key of this.config.keys()) {
+            tasks.push(this.preload(key));
+        }
+
+        await Promise.all(tasks);
+    },
+
+    /**
+     * Preload por nome
+     * @param {string} name
+     * @returns {Promise<void>}
+     */
+    async preload(name) {
+        const paths = this.resolvePaths(name);
+
+        /** @type {HTMLAudioElement[]} */
+        const audios = [];
+
+        for (const path of paths) {
+            const audio = new Audio();
+            audio.src = path;
+            audio.preload = "auto";
+
+            const p = new Promise(resolve => {
+                audio.addEventListener("canplaythrough", resolve, { once: true });
+                audio.addEventListener("error", resolve, { once: true });
+            });
+
+            audio.load();
+            await p;
+
+            audios.push(audio);
+        }
+
+        this.cache.set(name, audios);
+    },
+
+    /**
+     * Registra áudio ativo
+     * @param {string} trackName
+     * @param {HTMLAudioElement} audio
+     */
+    _register(trackName, audio) {
+        if (!this.activeByTrack.has(trackName)) {
+            this.activeByTrack.set(trackName, new Set());
+        }
+
+        const set = this.activeByTrack.get(trackName);
+        set.add(audio);
+
+        audio.addEventListener("ended", () => {
+            set.delete(audio);
+        });
+    },
+
+    /**
+     * Toca áudio
+     * @param {string} name
+     * @param {string|HTMLAudioElement} track
+     */
+    playAudio(name, track) {
+        const pool = this.cache.get(name);
+        if (!pool || pool.length === 0) return;
+
+        let trackName = "";
+        if (typeof track === "string") {
+            trackName = track;
+            track = this.getAudioTrack(track);
+        }
+
+        if (!track) return;
+
+        const base = pool[Math.floor(Math.random() * pool.length)];
+
+        const audio = /** @type {HTMLAudioElement} */ (track.cloneNode());
+
+        audio.src = base.src;
+        audio.volume = track.volume;
+        audio.currentTime = 0;
+
+        this._register(trackName, audio);
+
+        audio.play();
+    },
+
+    /**
+     * Define volume de uma track (inclusive ativos)
+     * @param {string} trackName
+     * @param {number} volume
+     */
+    setTrackVolume(trackName, volume) {
+        volume = Math.max(0, Math.min(1, volume));
+
+        const track = this.getAudioTrack(trackName);
+        if (track) track.volume = volume;
+
+        const set = this.activeByTrack.get(trackName);
+        if (!set) return;
+
+        for (const audio of set) {
+            audio.volume = volume;
+        }
+    }
+};
+
 const PlaylistService = {
     /** @type {Map<string, Playlist>} */
     playlists: new Map(),
 
     /**
-     * Cria uma playlist
+     * Cria playlist
      * @param {string} name
-     * @param {string[]} audios - nomes do AudioService
+     * @param {string[]} audios
      * @param {PlaylistOptions} [options]
      */
     create(name, audios, options = {}) {
@@ -312,7 +531,7 @@ const PlaylistService = {
     },
 
     /**
-     * Toca música atual
+     * Toca atual
      * @param {Playlist} pl
      */
     _playCurrent(pl) {
@@ -320,13 +539,13 @@ const PlaylistService = {
 
         const name = pl.audios[pl.index];
         const pool = AudioService.cache.get(name);
-
         if (!pool || pool.length === 0) return;
 
         const base = pool[Math.floor(Math.random() * pool.length)];
         const audio = /** @type {HTMLAudioElement} */ (pl.track.cloneNode());
 
         audio.src = base.src;
+        audio.volume = pl.track.volume;
         audio.currentTime = 0;
 
         pl.current = audio;
@@ -358,154 +577,13 @@ const PlaylistService = {
  * @property {boolean} [shuffle]
  * @property {HTMLAudioElement|string} [track]
  */
-
-const AudioService = {
-    /** @type { Map<string, any> } */
-    config: new Map(),
-
-    /** @type { Map<string, HTMLAudioElement[]> } */
-    cache: new Map(),
-
-    /**
-     * Pega um canal de áudio
-     * @param {string} name
-     * @returns {HTMLAudioElement|null}
-     */
-    getAudioTrack(name) {
-        const el = document.querySelector(`audio[track][name="${name}"]`);
-        if (!el) {
-            console.warn(`Audio track ${name} not found in DOM.`);
-            return null;
-        }
-        return el;
-    },
-
-    /**
-     * Carrega config JSON
-     * @returns {Promise<Record<string, string|string[]>>}
-     */
-    async getAudioConfig() {
-        const res = await fetch("./assets/soundconfig.json");
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    },
-
-    /**
-     * Atualiza config e pré-carrega áudios
-     * @returns {Promise<void>}
-     */
-    async updateConfig() {
-        this.config = new Map(
-            Object.entries(await this.getAudioConfig())
-        );
-
-        await this.preloadAll();
-    },
-
-    /**
-     * Resolve todos os caminhos possíveis de um áudio
-     * @param {string} name
-     * @returns {string[]}
-     */
-    resolvePaths(name) {
-        if (!this.config.has(name)) return [];
-
-        const value = this.config.get(name);
-
-        /** @type {string[]} */
-        let pool = [];
-
-        if (typeof value === "string") {
-            pool = Expander.expand(value);
-        } else if (Array.isArray(value)) {
-            for (const entry of value) {
-                pool.push(...Expander.expand(entry));
-            }
-        }
-
-        return pool.map(p => `./assets/sounds/${p}`);
-    },
-
-    /**
-     * Pré-carrega TODOS os áudios
-     * @returns {Promise<void>}
-     */
-    async preloadAll() {
-        /** @type {Promise<void>[]} */
-        const tasks = [];
-
-        for (const key of this.config.keys()) {
-            tasks.push(this.preload(key));
-        }
-
-        await Promise.all(tasks);
-        console.log("Áudios pré-carregados");
-    },
-
-    /**
-     * Pré-carrega um grupo de áudio
-     * @param {string} name
-     * @returns {Promise<void>}
-     */
-    async preload(name) {
-        const paths = this.resolvePaths(name);
-
-        /** @type {HTMLAudioElement[]} */
-        const audios = [];
-
-        for (const path of paths) {
-            const audio = new Audio();
-            audio.src = path;
-            audio.preload = "auto";
-
-            // força carregamento
-            const p = new Promise((resolve) => {
-                audio.addEventListener("canplaythrough", () => resolve(), { once: true });
-                audio.addEventListener("error", () => resolve(), { once: true });
-            });
-
-            audio.load();
-            await p;
-
-            audios.push(audio);
-        }
-
-        this.cache.set(name, audios);
-    },
-
-    /**
-     * Toca um áudio (sem rede, usando cache)
-     * @param {string} name
-     * @param {string|HTMLAudioElement} track
-     * @returns {void}
-     */
-    playAudio(name, track) {
-        const pool = this.cache.get(name);
-
-        if (!pool || pool.length === 0) {
-            console.warn(`Audio ${name} não está carregado.`);
-            return;
-        }
-
-        if (typeof track === "string") {
-            track = this.getAudioTrack(track);
-        }
-
-        const base = pool[Math.floor(Math.random() * pool.length)];
-
-        const audioElement = /** @type {HTMLAudioElement} */ (track.cloneNode());
-
-        audioElement.src = base.src;
-        audioElement.currentTime = 0;
-        audioElement.play();
-    }
-};
 AudioService.updateConfig();
 // [[ STORAGE ]]
 const Session = {
     temporary: ["temporary", "score", "auto_saving", "loaded"],
     
     score: 0,
+    total_score: 0,
     max_score: 0,
     rounds: 0,
 
@@ -513,23 +591,7 @@ const Session = {
     auto_saving: false,
     loaded: false,
 
-    async aSave() {
-        if (!(dadosUsuario && usuarioAtual)) return;
-        await update(ref(db, 'usuarios/' + usuarioAtual.uid), {
-            pontuacao_maxima: this.max_score,
-            nivel: 1
-        });
-        await set(ref(db, 'usuarios/' + usuarioAtual.uid), {
-            nome: dadosUsuario.nome,
-            pontuacao: this.score,
-            pontuacao_maxima: this.max_score
-        });
-        await push(ref(db, 'usuarios/' + usuarioAtual.uid), {
-            pontuacao: this.score,
-            pontuacao_maxima: this.max_score,
-            data: new Date().toISOString()
-        });
-    },
+    aSave: saveUserData,
     save() {
         localStorage.setItem(
             "session", JSON.stringify(this)
@@ -562,6 +624,7 @@ const Session = {
 
 // [[ ELEMENTOS ]]
 const dino = document.querySelector('.dino');
+const nuvem = document.querySelector(".nuvem");
 const board = document.getElementById('game-board');
 const scoreElement = document.querySelectorAll('.score-show');
 const maxScoreElement = document.getElementById('max-score');
@@ -569,24 +632,64 @@ const startMsg = document.getElementById('start-msg');
 const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 
+/** 
+ * @param   { string } name
+ * @param   { any } value
+ * @returns { void }
+ * */
+function changeCSSVariable(name, value) {
+    document.documentElement.style.setProperty(`--${name}`, value.toString());
+}
+/**
+ * Obtém o valor de uma variável CSS
+ * @param   {string} name
+ * @param   {HTMLElement} [el]
+ * @returns {string}
+ */
+function getCSSVariable(name, el = document.documentElement) {
+    return getComputedStyle(el)
+        .getPropertyValue(`--${name}`)
+        .trim();
+}
 const sfxTrack = AudioService.getAudioTrack("sfx");
 const bgmTrack = AudioService.getAudioTrack("bgm");
 
 // [[ VARIÁVEIS ]]
 let isGameOver = false;
 let scoreInterval;
-let cactusTimeout;
 let checkCollisionInterval;
 let jumping = false;
 let gameStarted = false;
+let musicPlaying = false;
+
+let cactusTimeout;
+let cactusAnimationDuration = "3s";
+let cactusIntervalDuration = 2000;
+let cactusIntervalDurationRandomness = 500;
+
+let cloudTimeout;
+let cloudAnimationDuration = "15s";
+let cloudIntervalDuration = 1500;
+let cloudIntervalDurationRandomness = 500;
+let cloudScale = 1;
+let cloudScaleRandomness = 1;
+
+let cactusTexture = "🌵";
+let dinoTexture = "🦖";
+let cloudTexture = "☁️";
+
+const defaultBackgroundColor = getCSSVariable("background-color");
+const defaultGroundColor1 = getCSSVariable("ground-color1");
+const defaultGroundColor2 = getCSSVariable("ground-color2");
+
 console.log(dadosUsuario)
-// [[ INICIALIZAÇÃO ]]
-scoreElement.innerText = "100";
 
 // [[ CACTO INICIAL ]]
-const randomTime = Math.random() * 1500 + 1000;
-const cactos = document.querySelectorAll('.cacto');
+const randomTime = Math.random() * cactusIntervalDurationRandomness + cactusIntervalDuration;
 cactusTimeout = setTimeout(spawnCactus, randomTime);
+
+const randomCloudTime = Math.random() * cloudIntervalDurationRandomness + cloudIntervalDuration;
+cloudTimeout = setTimeout(spawnCloud, randomCloudTime);
 
 // [[ EVENTOS ]]
 document.addEventListener("keydown", (event) => {
@@ -603,8 +706,11 @@ board.addEventListener('click', () => {
     handleAction(false);
 });
 
+
 function startBackgroundMusic() {
-    bgmTrack.volume = .2;
+    if (musicPlaying) return;
+    musicPlaying = true;
+    AudioService.setTrackVolume("bgm", 0.5);
 
     const bgmPlaylist = PlaylistService.create(
         "bgm",
@@ -618,18 +724,69 @@ function startBackgroundMusic() {
 }
 
 document.addEventListener("load", () => {
-    console.log("Carregando dados");
     Session.load();
-    startBackgroundMusic();
+    console.log("Carregando dados");
 });
 document.addEventListener("beforeunload", () => {
     console.log("Guardando Dados")
     Session.save();
 });
 
+function once() {
+    if (musicPlaying) return;
+    startBackgroundMusic();
+}
+function processTextures() {
+    const c = Math.random() * 100;
+    
+    cactusTexture = "🌵";
+    dinoTexture = "🦖";
+    cloudTexture = "☁️";
+
+    changeCSSVariable("background-color", defaultBackgroundColor);
+    changeCSSVariable("ground-color1", defaultGroundColor1);
+    changeCSSVariable("ground-color2", defaultGroundColor2);
+
+    // --background-color: #87CEEB;;
+    // --ground-color1: #C4A95A;
+    // --ground-color2: #8B7355;
+    if (c < 5) {
+        cactusTexture = "🦖";
+        dinoTexture = "🌵";
+        cloudTexture = "☀️";
+        
+        changeCSSVariable("background-color", "#C4A95A");
+        changeCSSVariable("ground-color1", "#87CEEB");
+        changeCSSVariable("ground-color2", "#528db7");
+    } else
+    if (c < 10) {
+        cactusTexture = "🔺";
+        dinoTexture = "🟨";
+        cloudTexture = "⬜◽";
+        
+        changeCSSVariable("background-color", "#6797fe");
+        changeCSSVariable("ground-color1", "#8250eb");
+        changeCSSVariable("ground-color2", "#4e2673");
+    } else
+    if (c < 20) {
+        cactusTexture = "🌳";
+        dinoTexture = "🦕";
+        cloudTexture = "🌧️";
+
+        changeCSSVariable("background-color", "#201f2d");
+        changeCSSVariable("ground-color1", "#03491b");
+        changeCSSVariable("ground-color2", "#003000");
+    }
+    dino.innerText = dinoTexture;
+    nuvem.innerText = cloudTexture;
+}   
 function startGame() {
+    once();
+    processTextures();
+
     gameStarted = true;
     Session.score = 0;
+    Session.rounds++;
     document
         .querySelectorAll(".paused")
         .forEach(el => {
@@ -640,6 +797,9 @@ function startGame() {
         .forEach(el => {
             el.remove();
         });
+    document
+        .querySelectorAll(".nuvem")
+        .forEach(el => el.remove());
 }
 function restartGame() {
     startGame();
@@ -672,6 +832,7 @@ function handleGameOver() {
     gameStarted = false;
     
     let score = Session.score;
+    Session.total_score += score;
     if (score !== 0) {
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
@@ -688,7 +849,7 @@ function handleGameOver() {
         });
     AudioService.playAudio("hit", sfxTrack);
     gameOverMsg.classList.remove('hidden');
-    // Session.save();
+    saveUserData();
 }
 
 // [[ FUNÇÕES ]]
@@ -740,20 +901,78 @@ scoreInterval = setInterval(() => {
         }
 
     }
+
+    if (Session.score == 0) {
+        cactusAnimationDuration = "3s";
+        cactusIntervalDuration = 2000;
+        cactusIntervalDurationRandomness = 500;
+    
+    } else if (Session.score == 100) {
+        cactusAnimationDuration = "2.9s";
+        cactusIntervalDuration = 2000;
+        cactusIntervalDurationRandomness = 500;
+
+    } else if (Session.score == 500) {
+        cactusAnimationDuration = "2.8s";
+        cactusIntervalDuration = 2000;
+        cactusIntervalDurationRandomness = 500;
+
+    } else if (Session.score == 1000) {
+        cactusAnimationDuration = "2.7s";
+        cactusIntervalDuration = 2000;
+        cactusIntervalDurationRandomness = 500;
+
+    } else if (Session.score == 2000) {
+        cactusAnimationDuration = "2.6s";
+        cactusIntervalDuration = 1750;
+        cactusIntervalDurationRandomness = 1000;
+
+    }
 }, 100);
 
 function spawnCactus() {
     if (gameStarted && !isGameOver) {
         const cactus = document.createElement('div');
         cactus.classList.add("cacto");
-        cactus.innerText = '🌵';
+        cactus.innerText = cactusTexture;
+        cactus.style.animationDuration = cactusAnimationDuration;
         board.appendChild(cactus);
-
+        setTimeout(() => {
+            if (!gameStarted) return;
+            cactus.remove()
+        }, 10_000);
     }
-    const randomTime = Math.random() * 1500 + 1000;
+    const randomTime = Math.random() * cactusIntervalDurationRandomness + cactusIntervalDuration;
     cactusTimeout = setTimeout(spawnCactus, randomTime);
 }
+function spawnCloud() {
+    if (gameStarted && !isGameOver) {
+        const cloud = document.createElement("div");
+        
+        const scale = Math.random() * cloudScaleRandomness + cloudScale;
+        cloud.style.transform = `scale(${scale})`;
+        cloud.style.opacity = scale;
+        
+        cloud.classList.add("nuvem");
+        cloud.innerText = cloudTexture;
 
+        // posição vertical aleatória
+        const top = Math.random() * 100 + 20; // entre 20px e 120px
+        cloud.style.top = `${top}px`;
+
+        cloud.style.animationDuration = cloudAnimationDuration;
+
+        board.appendChild(cloud);
+
+        // remover depois de um tempo
+        setTimeout(() => {
+            cloud.remove();
+        }, 20000);
+    }
+
+    const randomTime = Math.random() * cloudIntervalDurationRandomness + cloudIntervalDuration;
+    cloudTimeout = setTimeout(spawnCloud, randomTime);
+}
 function checkCollision() {
     if (!gameStarted) return;
     const dinoRect = dino.getBoundingClientRect();
@@ -761,11 +980,20 @@ function checkCollision() {
 
     cactuses.forEach((cactus) => {
         const cactusRect = cactus.getBoundingClientRect();
-        if (
-            dinoRect.right > cactusRect.left + 10 &&
-            dinoRect.left < cactusRect.right - 10 &&
-            dinoRect.bottom > cactusRect.top + 10 
+        const hitbox = {
+            top: 20,
+            bottom: 15,
+            left: 30,
+            right: 30
+        };
 
-        ) { handleGameOver(); }
+        if (
+            dinoRect.right > cactusRect.left + hitbox.left &&
+            dinoRect.left < cactusRect.right - hitbox.right &&
+            dinoRect.bottom > cactusRect.top + hitbox.top &&
+            dinoRect.top < cactusRect.bottom - hitbox.bottom
+        ) {
+            handleGameOver();
+        }
     });
 }

@@ -1,26 +1,110 @@
 :root {
-    --primary-color: #008037;
+    /* =========================
+       PALETA PRINCIPAL (DARK)
+    ========================== */
+    --primary-color: #002300ff;
+    --primary-dark: #000e00ff;
     --secondary-color: #FFC72C;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
+
+    --success-color: #2ecc71;
+    --danger-color: #ff4d5a;
     --warning-color: #FFC72C;
-    --info-color: #17a2b8;
+    --info-color: #4db8ff;
+
     --dark-color: #000000;
     --light-color: #f8f9fa;
-    
-    --background-color: var(--dark-color);
-    /** --primary-color: #00e444ff; */
-    --contrast-color: #c6ffd9ff;
 
-    --bg-gradient: linear-gradient(135deg, #008037 0%, #006b2d 100%);
+    --text-color: #e6e6e6;
+    --muted-text-color: #a0a0a0;
+
+    /* =========================
+       BACKGROUND / SURFACES
+    ========================== */
+    --background-color: #0f1115;
+    --background-gradient-angle: 135deg;
+    --background-gradient-start: #0f1115;
+    --background-gradient-end: #151a22;
+
+    --surface-color: #1b1f27;
+    --surface-alt-color: #141820;
+
+    /* =========================
+       BORDER / SHADOW
+    ========================== */
+    --border-color: #2a2f3a;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 15px;
+
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.7);
+
+    /* =========================
+       SPACING
+    ========================== */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+
+    /* =========================
+       TYPOGRAPHY
+    ========================== */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    --font-size-sm: 0.9rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.2rem;
+    --font-size-xl: 2rem;
+    --font-size-xxl: 3rem;
+
+    --font-weight-normal: 400;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* =========================
+       TRANSITIONS
+    ========================== */
+    --transition-fast: 0.2s;
+    --transition-normal: 0.3s;
+
+    /* =========================
+       LAYOUT
+    ========================== */
+    --container-max-width: 450px;
+    --sidebar-width: 250px;
+    --navbar-height: 56px;
+
+    /* =========================
+       SPECIAL COLORS
+    ========================== */
+    --gold-color: #FFC72C;
+    --silver-color: #b0b0b0;
+    --bronze-color: #c47a3a;
+
+    --overlay-bg: rgba(0, 0, 0, 0.6);
+    --overlay-dark: rgba(0, 0, 0, 0.75);
 }
 
+/* =========================
+   BASE
+========================= */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-gradient);
+    font-family: var(--font-family);
+    background: linear-gradient(
+        var(--background-gradient-angle),
+        var(--background-gradient-start),
+        var(--background-gradient-end)
+    );
     min-height: 100vh;
+    color: var(--text-color);
 }
 
+/* =========================
+   LOGIN
+========================= */
 .login-container {
     min-height: 100vh;
     display: flex;
@@ -29,36 +113,43 @@ body {
 }
 
 .login-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    background: var(--surface-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
-    max-width: 450px;
+    max-width: var(--container-max-width);
     width: 100%;
     border-top: 5px solid var(--primary-color);
 }
 
 .login-header {
-    background: linear-gradient(135deg, var(--primary-color), #006b2d);
-    padding: 30px;
+    background: linear-gradient(
+        var(--background-gradient-angle),
+        var(--primary-color),
+        var(--primary-dark)
+    );
+    padding: var(--spacing-lg);
     text-align: center;
     color: white;
 }
 
 .login-header .icon {
-    font-size: 3rem;
-    margin-bottom: 10px;
+    font-size: var(--font-size-xxl);
+    margin-bottom: var(--spacing-sm);
 }
 
 .login-body {
-    padding: 40px;
+    padding: var(--spacing-xl);
 }
 
+/* =========================
+   FORMS
+========================= */
 .form-control {
-    border-radius: 8px;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s;
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm) 15px;
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-normal);
 }
 
 .form-control:focus {
@@ -66,71 +157,86 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.1);
 }
 
+/* =========================
+   BUTTONS
+========================= */
 .btn-login {
-    background: linear-gradient(135deg, var(--primary-color), #006b2d);
+    background: linear-gradient(
+        var(--background-gradient-angle),
+        var(--primary-color),
+        var(--primary-dark)
+    );
     border: none;
-    border-radius: 8px;
-    padding: 12px;
-    font-weight: 600;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    font-weight: var(--font-weight-semibold);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .btn-login:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 128, 55, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
-.btn-login:active {
-    transform: translateY(0);
-}
-
+/* =========================
+   DIVIDER
+========================= */
 .divider {
     display: flex;
     align-items: center;
-    margin: 20px 0;
+    margin: var(--spacing-md) 0;
 }
 
 .divider::before,
 .divider::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .divider span {
-    padding: 0 10px;
-    color: #6c757d;
-    font-size: 0.9rem;
+    padding: 0 var(--spacing-sm);
+    color: var(--muted-text-color);
+    font-size: var(--font-size-sm);
 }
 
+/* =========================
+   LINKS
+========================= */
 .link-cadastro {
     color: var(--primary-color);
     text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s;
+    font-weight: var(--font-weight-semibold);
+    transition: color var(--transition-fast);
 }
 
 .link-cadastro:hover {
-    color: #006b2d;
+    color: var(--primary-dark);
 }
 
+/* =========================
+   ALERTS
+========================= */
 .alert-custom {
-    border-radius: 8px;
-    padding: 12px 15px;
-    margin-bottom: 20px;
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm) 15px;
+    margin-bottom: var(--spacing-md);
 }
 
-/* Dashboard Styles */
+/* =========================
+   SIDEBAR
+========================= */
 .sidebar {
-    min-height: calc(100vh - 56px);
+    min-height: calc(100vh - var(--navbar-height));
     background: var(--primary-color) !important;
+    width: var(--sidebar-width);
 }
 
 .sidebar .nav-link {
     color: rgba(255, 255, 255, 0.8);
-    padding: 12px 20px;
+    padding: var(--spacing-sm) 20px;
     border-radius: 0;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
 }
 
 .sidebar .nav-link:hover,
@@ -139,39 +245,40 @@ body {
     background: rgba(255, 199, 44, 0.3);
 }
 
-.sidebar .nav-link i {
-    width: 20px;
-    text-align: center;
-    margin-right: 10px;
-}
-
+/* =========================
+   MAIN CONTENT
+========================= */
 .main-content {
-    min-height: calc(100vh - 56px);
-    /* #f5f6fa */
-    background: #f5f6fa;
+    min-height: calc(100vh - var(--navbar-height));
+    background: var(--surface-alt-color);
 }
 
+/* =========================
+   CARDS
+========================= */ 
+.stat-card .icon i {
+    font-size: 2.5rem;
+    opacity: 75%;
+}
 .stat-card {
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
 }
 
-.stat-card .icon {
-    font-size: 2.5rem;
-    opacity: 0.8;
-}
-
+/* =========================
+   TABLE
+========================= */
 .table-ranking {
-    background: white;
-    border-radius: 12px;
+    background: var(--surface-color);
+    border-radius: var(--border-radius-md);
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .table-ranking thead {
@@ -179,52 +286,47 @@ body {
     color: white;
 }
 
-.table-ranking tbody tr {
-    transition: background 0.2s;
-}
-
 .table-ranking tbody tr:hover {
-    background: #f8f9fa;
+    background: var(--surface-alt-color);
 }
 
-.table-ranking .medal {
-    font-size: 1.2rem;
-}
+.table-ranking .gold { color: var(--gold-color); }
+.table-ranking .silver { color: var(--silver-color); }
+.table-ranking .bronze { color: var(--bronze-color); }
 
-.table-ranking .gold { color: #FFC72C; }
-.table-ranking .silver { color: #c0c0c0; }
-.table-ranking .bronze { color: #cd7f32; }
-
-.navbar-brand i {
-    margin-right: 8px;
-}
-
+/* =========================
+   USER
+========================= */ 
 .user-info {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 10px;
+    white-space: nowrap;
 }
-
 .user-avatar {
     width: 35px;
     height: 35px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(
+        var(--background-gradient-angle),
+        var(--primary-color),
+        var(--secondary-color)
+    );
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-weight: bold;
+    font-weight: var(--font-weight-bold);
 }
 
-/* Loading Spinner */
+/* =========================
+   LOADING
+========================= */
 .spinner-container {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
+    inset: 0;
+    background: var(--overlay-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -240,12 +342,14 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* =========================
+   ANIMATIONS
+========================= */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Animations */
 .fade-in {
     animation: fadeIn 0.5s ease-in;
 }
@@ -255,47 +359,52 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Cores IFAM personalizadas */
-.bg-ifam-green {
-    background-color: #008037 !important;
-}
+/* =========================
+   UTILS (IFAM)
+========================= */
+.bg-ifam-green { background-color: var(--primary-color) !important; }
+.bg-ifam-yellow { background-color: var(--secondary-color) !important; }
 
-.bg-ifam-yellow {
-    background-color: #FFC72C !important;
-}
+.text-ifam-green { color: var(--primary-color) !important; }
+.text-ifam-yellow { color: var(--secondary-color) !important; }
 
-.text-ifam-green {
-    color: #008037 !important;
-}
+.border-ifam { border-color: var(--primary-color) !important; }
 
-.text-ifam-yellow {
-    color: #FFC72C !important;
-}
-
-.border-ifam {
-    border-color: #008037 !important;
-}
-
-/* Responsive */
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
         z-index: 1000;
-        width: 250px;
+        width: var(--sidebar-width);
         transform: translateX(-100%);
-        transition: transform 0.3s;
+        transition: transform var(--transition-normal);
     }
-    
+
     .sidebar.show {
         transform: translateX(0);
     }
-    
+
     .login-body {
-        padding: 25px;
+        padding: var(--spacing-md);
     }
+
     .game-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--spacing-sm);
     }
+}
+
+/* =========================
+   MISC
+========================= */
+.icon-adjust {
+    position: relative;
+    top: -7.5px;
+}
+
+.bg-light {
+    background-color: var(--dark-color) !important;
 }
