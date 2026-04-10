@@ -837,6 +837,7 @@ function handleGameOver() {
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
     Session.rounds++;
+    saveUserData();
     document
         .querySelectorAll(".nuvem")
         .forEach(n => {
@@ -849,7 +850,6 @@ function handleGameOver() {
         });
     AudioService.playAudio("hit", sfxTrack);
     gameOverMsg.classList.remove('hidden');
-    saveUserData();
 }
 
 // [[ FUNÇÕES ]]
@@ -904,27 +904,27 @@ scoreInterval = setInterval(() => {
 
     if (Session.score == 0) {
         cactusAnimationDuration = "3s";
-        cactusIntervalDuration = 2000;
-        cactusIntervalDurationRandomness = 500;
+        cactusIntervalDuration = 1750;
+        cactusIntervalDurationRandomness = 1000;
     
+    } else if (Session.score == 50) {
+        cactusAnimationDuration = "2.5s";
+        cactusIntervalDuration = 1500;
+        cactusIntervalDurationRandomness = 1000;
+
     } else if (Session.score == 100) {
-        cactusAnimationDuration = "2.9s";
-        cactusIntervalDuration = 2000;
-        cactusIntervalDurationRandomness = 500;
+        cactusAnimationDuration = "2.3s";
+        cactusIntervalDuration = 1250;
+        cactusIntervalDurationRandomness = 1000;
 
     } else if (Session.score == 500) {
-        cactusAnimationDuration = "2.8s";
-        cactusIntervalDuration = 2000;
+        cactusAnimationDuration = "2.1s";
+        cactusIntervalDuration = 1000;
         cactusIntervalDurationRandomness = 500;
 
     } else if (Session.score == 1000) {
-        cactusAnimationDuration = "2.7s";
-        cactusIntervalDuration = 2000;
-        cactusIntervalDurationRandomness = 500;
-
-    } else if (Session.score == 2000) {
-        cactusAnimationDuration = "2.6s";
-        cactusIntervalDuration = 1750;
+        cactusAnimationDuration = "2s";
+        cactusIntervalDuration = 1000;
         cactusIntervalDurationRandomness = 1000;
 
     }

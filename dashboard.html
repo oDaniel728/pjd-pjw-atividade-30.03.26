@@ -48,7 +48,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-ifam">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-gamepad"></i> Jogo WEB IFAM
+                <i class="fas fa-gamepad"></i> POC: Pule os Cactos
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -57,21 +57,21 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" id="navHome">
-                            <i class="fas fa-home me-1"></i> Início
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="navJogar">
-                            <i class="fas fa-play me-1"></i> Jogar
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="navRanking">
-                            <i class="fas fa-trophy me-1"></i> Ranking
-                        </a>
-                    </li>
+                    <!-- <li class="nav-item"> -->
+                    <!--     <a class="nav-link active" href="#" id="navHome"> -->
+                    <!--         <i class="fas fa-home me-1"></i> Início -->
+                    <!--     </a> -->
+                    <!-- </li> -->
+                    <!-- <li class="nav-item"> -->
+                    <!--     <a class="nav-link" href="#" id="navJogar"> -->
+                    <!--         <i class="fas fa-play me-1"></i> Jogar -->
+                    <!--     </a> -->
+                    <!-- </li> -->
+                    <!-- <li class="nav-item"> -->
+                    <!--     <a class="nav-link" href="#" id="navRanking"> -->
+                    <!--         <i class="fas fa-trophy me-1"></i> Ranking -->
+                    <!--     </a> -->
+                    <!-- </li> -->
                 </ul>
                 
                 <div class="d-flex align-items-center gap-2">
@@ -335,11 +335,35 @@
                     </div>
                 </section>
 
+                <!-- Seção Histórico -->
+                <section id="section-historico" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-history me-2"></i>Histórico de Partidas
+                        </h1>
+                        <button class="btn btn-outline-primary" id="btnAtualizarHistorico">
+                            <i class="fas fa-sync-alt me-1"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="historicoCompleto">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </main>
         </div>
     </div>
 
-    <!-- Modal de Jogo Simples (Jogo da Memória) -->
+    <!--  -->
     <div class="modal fade" id="modalJogo" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -665,6 +689,76 @@
                 alert('Perfil atualizado com sucesso!');
             }
         });
+
+        async function carregarHistoricoCompleto(uid) {
+            try {
+                const snapshot = await get(ref(db, 'historico/' + uid));
+                const container = document.getElementById('historicoCompleto');
+
+                if (!snapshot.exists()) {
+                    container.innerHTML = `
+                        <p class="text-muted text-center">
+                            Nenhuma partida registrada.
+                        </p>`;
+                    return;
+                }
+
+                const dados = Object.values(snapshot.val()).reverse();
+
+                let html = `
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Pontuação</th>
+                        <th>Total</th>
+                        <th>Máxima</th>
+                        <th>Nível</th>
+                        <th>Rounds</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+                dados.forEach(partida => {
+                    const data = new Date(partida.data).toLocaleString('pt-BR');
+
+                    html += `
+                    <tr>
+                        <td>${data}</td>
+                        <td><strong>${partida.score}</strong></td>
+                        <td>${partida.total_score}</td>
+                        <td>${partida.max_score}</td>
+                        <td>${partida.nivel}</td>
+                        <td>${partida.rounds}</td>
+                    </tr>`;
+                });
+
+                html += `
+                </tbody>
+            </table>
+        </div>`;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // botão atualizar
+        document.getElementById('btnAtualizarHistorico').addEventListener('click', () => {
+            if (usuarioAtual) {
+                carregarHistoricoCompleto(usuarioAtual.uid);
+            }
+        });
+        // botão histórico
+        document.querySelector("a[data-section=\"historico\"]").addEventListener('click', () => {
+            if (usuarioAtual) {
+                carregarHistoricoCompleto(usuarioAtual.uid);
+            }
+        })
+
     </script>
 
 </body>
