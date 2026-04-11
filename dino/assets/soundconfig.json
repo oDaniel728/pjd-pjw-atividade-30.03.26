@@ -3,5 +3,6 @@
     "jump": [ "jump-sounds/sfx1..14.mp3" ],
     "death": "death.mp3",
     "hit": "hit.mp3",
-    "bg-song": [ "bg-songs/song1..4.mp3" ]
+    "bg-song": [ "bg-songs/song1..4.mp3" ],
+    "score": "score.mp3"
 }
