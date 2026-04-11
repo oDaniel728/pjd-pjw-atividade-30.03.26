@@ -41,31 +41,23 @@ async function saveUserData() {
     const max = Session.max_score;
     const nivel = Math.floor(total / 500) + 1;
 
-    // 1. dados principais do usuário
-    await set(ref(db, `usuarios/${uid}`), {
+    const data = {
         nome: dadosUsuario.nome,
         total_score: total,
         max_score: max,
         nivel: nivel,
         rounds: Session.rounds,
-    });
+    }
+
+    // 1. dados principais do usuário
+    await set(ref(db, `usuarios/${uid}`), data);
 
     // 2. ranking separado (evita bagunça no users)
-    await set(ref(db, `ranking/${uid}`), {
-        nome: dadosUsuario.nome,
-        total_score: total,
-        max_score: max,
-        nivel: nivel,
-        rounds: Session.rounds,
-    });
+    await set(ref(db, `ranking/${uid}`), data);
 
     // 3. histórico (sempre append)
     await push(ref(db, `historico/${uid}`), {
-        score: Session.score,
-        total_score: total,
-        max_score: max,
-        nivel: nivel,
-        rounds: Session.rounds,
+        ...data,
         data: new Date().toISOString()
     });
 }
@@ -402,6 +394,8 @@ const AudioService = {
         if (typeof track === "string") {
             trackName = track;
             track = this.getAudioTrack(track);
+        } else if (track instanceof HTMLAudioElement) {
+            trackName = track.getAttribute("name") || "";
         }
 
         if (!track) return;
@@ -414,7 +408,9 @@ const AudioService = {
         audio.volume = track.volume;
         audio.currentTime = 0;
 
-        this._register(trackName, audio);
+        if (trackName) {
+            this._register(trackName, audio);
+        }
 
         audio.play();
     },
@@ -543,10 +539,15 @@ const PlaylistService = {
 
         const base = pool[Math.floor(Math.random() * pool.length)];
         const audio = /** @type {HTMLAudioElement} */ (pl.track.cloneNode());
+        const trackName = pl.track.getAttribute("name") || "";
 
         audio.src = base.src;
         audio.volume = pl.track.volume;
         audio.currentTime = 0;
+
+        if (trackName) {
+            AudioService._register(trackName, audio);
+        }
 
         pl.current = audio;
 
@@ -579,6 +580,63 @@ const PlaylistService = {
  */
 AudioService.updateConfig();
 // [[ STORAGE ]]
+const Config = {
+    key: "config",
+    loaded: false,
+    data: {},
+
+    load() {
+        if (this.loaded) return this.data;
+        this.loaded = true;
+
+        const raw = localStorage.getItem(this.key);
+
+        // Primeiro uso: cria um objeto vazio persistido.
+        if (!raw) {
+            this.data = {};
+            this.save();
+            return this.data;
+        }
+
+        try {
+            const parsed = JSON.parse(raw);
+            this.data = (parsed && typeof parsed === "object") ? parsed : {};
+        } catch {
+            this.data = {};
+            this.save();
+        }
+
+        return this.data;
+    },
+
+    save() {
+        localStorage.setItem(this.key, JSON.stringify(this.data));
+    },
+
+    get(name, fallback = null) {
+        return Object.hasOwn(this.data, name)
+            ? this.data[name]
+            : fallback;
+    },
+
+    set(name, value) {
+        this.data[name] = value;
+        this.save();
+    },
+
+    setDefault(name, value) {
+        if (!Object.hasOwn(this.data, name)) {
+            this.data[name] = value;
+            this.save();
+        }
+    }
+};
+
+Config.load();
+
+Config.setDefault("bgmActivated", true);
+Config.setDefault("sfxActivated", true);
+
 const Session = {
     temporary: ["temporary", "score", "auto_saving", "loaded"],
     
@@ -631,6 +689,7 @@ const maxScoreElement = document.getElementById('max-score');
 const startMsg = document.getElementById('start-msg');
 const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
+const configElements = document.querySelectorAll("[data-config]");
 
 /** 
  * @param   { string } name
@@ -653,6 +712,89 @@ function getCSSVariable(name, el = document.documentElement) {
 }
 const sfxTrack = AudioService.getAudioTrack("sfx");
 const bgmTrack = AudioService.getAudioTrack("bgm");
+const defaultSfxVolume = 0.5;
+const defaultBgmVolume = 0.2;
+
+/**
+ * @param {string} key
+ * @returns {boolean}
+ */
+function getBooleanConfig(key) {
+    const value = Config.get(key, false);
+
+    if (typeof value === "boolean") return value;
+
+    const normalized = Boolean(value);
+    Config.set(key, normalized);
+    return normalized;
+}
+
+/**
+ * @param {HTMLElement} container
+ * @param {boolean} isActive
+ * @returns {void}
+ */
+function renderConfigElement(container, isActive) {
+    const activatedEl = container.querySelector(".activated");
+    const deactivatedEl = container.querySelector(".deactivated");
+
+    if (activatedEl) activatedEl.classList.toggle("hidden", !isActive);
+    if (deactivatedEl) deactivatedEl.classList.toggle("hidden", isActive);
+
+    container.setAttribute("aria-pressed", String(isActive));
+}
+
+/**
+ * @param {string} key
+ * @param {boolean} value
+ * @returns {void}
+ */
+function applyConfigEffect(key, value) {
+    if (key === "bgmActivated") {
+        AudioService.setTrackVolume("bgm", value ? defaultBgmVolume : 0);
+        return;
+    }
+
+    if (key === "sfxActivated") {
+        AudioService.setTrackVolume("sfx", value ? defaultSfxVolume : 0);
+    }
+}
+
+/**
+ * Liga a UI com o objeto Config para chaves booleanas em [data-config].
+ * @returns {void}
+ */
+function bindConfigElements() {
+    configElements.forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
+
+        const key = el.dataset.config;
+        if (!key) return;
+
+        const value = getBooleanConfig(key);
+        renderConfigElement(el, value);
+        applyConfigEffect(key, value);
+
+        el.setAttribute("role", "button");
+        el.setAttribute("tabindex", "0");
+
+        const toggle = () => {
+            const next = !getBooleanConfig(key);
+            Config.set(key, next);
+            renderConfigElement(el, next);
+            applyConfigEffect(key, next);
+        };
+
+        el.addEventListener("click", toggle);
+        el.addEventListener("keydown", (event) => {
+            if (event.code !== "Enter" && event.code !== "Space") return;
+            event.preventDefault();
+            toggle();
+        });
+    });
+}
+
+bindConfigElements();
 
 // [[ VARIÁVEIS ]]
 let isGameOver = false;
@@ -663,24 +805,30 @@ let gameStarted = false;
 let musicPlaying = false;
 
 let cactusTimeout;
-let cactusAnimationDuration = "3s";
+let cactusAnimationDuration = 3;
+let cactusAnimationDurationRandomness = 0;
 let cactusIntervalDuration = 2000;
 let cactusIntervalDurationRandomness = 500;
 
 let cloudTimeout;
-let cloudAnimationDuration = "15s";
+let cloudAnimationDuration = 10;
+let cloudAnimationDurationRandomness = 10;
 let cloudIntervalDuration = 1500;
 let cloudIntervalDurationRandomness = 500;
 let cloudScale = 1;
 let cloudScaleRandomness = 1;
+let dinoRotation = 0;
 
 let cactusTexture = "🌵";
 let dinoTexture = "🦖";
 let cloudTexture = "☁️";
 
-const defaultBackgroundColor = getCSSVariable("background-color");
+const defaultBackgroundColor1 = getCSSVariable("background-color1");
+const defaultBackgroundColor2 = getCSSVariable("background-color2");
+
 const defaultGroundColor1 = getCSSVariable("ground-color1");
 const defaultGroundColor2 = getCSSVariable("ground-color2");
+const defaultGroundColor3 = getCSSVariable("ground-color3");
 
 console.log(dadosUsuario)
 
@@ -710,7 +858,14 @@ board.addEventListener('click', () => {
 function startBackgroundMusic() {
     if (musicPlaying) return;
     musicPlaying = true;
-    AudioService.setTrackVolume("bgm", 0.5);
+    AudioService.setTrackVolume(
+        "sfx",
+        getBooleanConfig("sfxActivated") ? defaultSfxVolume : 0
+    );
+    AudioService.setTrackVolume(
+        "bgm",
+        getBooleanConfig("bgmActivated") ? defaultBgmVolume : 0
+    );
 
     const bgmPlaylist = PlaylistService.create(
         "bgm",
@@ -743,9 +898,11 @@ function processTextures() {
     dinoTexture = "🦖";
     cloudTexture = "☁️";
 
-    changeCSSVariable("background-color", defaultBackgroundColor);
+    changeCSSVariable("background-color1", defaultBackgroundColor1);
+    changeCSSVariable("background-color2", defaultBackgroundColor2);
     changeCSSVariable("ground-color1", defaultGroundColor1);
     changeCSSVariable("ground-color2", defaultGroundColor2);
+    changeCSSVariable("ground-color3", defaultGroundColor3);
 
     // --background-color: #87CEEB;;
     // --ground-color1: #C4A95A;
@@ -755,27 +912,44 @@ function processTextures() {
         dinoTexture = "🌵";
         cloudTexture = "☀️";
         
-        changeCSSVariable("background-color", "#C4A95A");
+        changeCSSVariable("background-color1", "#C4A95A");
+        changeCSSVariable("background-color2", "#8B7355");
         changeCSSVariable("ground-color1", "#87CEEB");
         changeCSSVariable("ground-color2", "#528db7");
+        changeCSSVariable("ground-color3", "#2b527c");
     } else
     if (c < 10) {
         cactusTexture = "🔺";
         dinoTexture = "🟨";
         cloudTexture = "⬜◽";
         
-        changeCSSVariable("background-color", "#6797fe");
+        changeCSSVariable("background-color1", "#6797fe");
+        changeCSSVariable("background-color2", "#3a5fb0");
         changeCSSVariable("ground-color1", "#8250eb");
         changeCSSVariable("ground-color2", "#4e2673");
+        changeCSSVariable("ground-color3", "#2b1340");
     } else
-    if (c < 20) {
+    if (c < 15) {
+        cactusTexture = "🔥";
+        dinoTexture = "💧";
+        cloudTexture = "☁️";
+
+        changeCSSVariable("background-color1", "#00002d");
+        changeCSSVariable("background-color2", "#020215");
+        changeCSSVariable("ground-color1", "#aaaaaa");
+        changeCSSVariable("ground-color2", "#333333");
+        changeCSSVariable("ground-color3", "#111111");
+    } else
+    if (c < 35) {
         cactusTexture = "🌳";
         dinoTexture = "🦕";
         cloudTexture = "🌧️";
 
-        changeCSSVariable("background-color", "#201f2d");
+        changeCSSVariable("background-color1", "#201f2d");
+        changeCSSVariable("background-color2", "#39365a");
         changeCSSVariable("ground-color1", "#03491b");
         changeCSSVariable("ground-color2", "#003000");
+        changeCSSVariable("ground-color3", "#001800");
     }
     dino.innerText = dinoTexture;
     nuvem.innerText = cloudTexture;
@@ -787,6 +961,8 @@ function startGame() {
     gameStarted = true;
     Session.score = 0;
     Session.rounds++;
+    dinoRotation = 0;
+    dino.style.setProperty("--rotation", `${dinoRotation}deg`);
     document
         .querySelectorAll(".paused")
         .forEach(el => {
@@ -836,7 +1012,7 @@ function handleGameOver() {
     if (score !== 0) {
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
-    Session.rounds++;
+    // Session.rounds++;
     saveUserData();
     document
         .querySelectorAll(".nuvem")
@@ -848,6 +1024,7 @@ function handleGameOver() {
         .forEach(c => {
             c.classList.add("paused");
         });
+    dino.classList.add("paused");
     AudioService.playAudio("hit", sfxTrack);
     gameOverMsg.classList.remove('hidden');
 }
@@ -859,6 +1036,8 @@ function jump() {
 
     AudioService.playAudio("jump", sfxTrack);
 
+    dino.style.setProperty("--rotation", `${dinoRotation}deg`);
+
     dino.classList.remove('jump');
 
     void dino.offsetWidth;
@@ -867,7 +1046,10 @@ function jump() {
 
     setTimeout (() => {
         jumping = false;
+        if (!gameStarted) return;
         dino.classList.remove('jump');
+        dinoRotation += 180;
+        dino.style.setProperty("--rotation", `${dinoRotation}deg`);
     }, 500);
 }
 
@@ -903,27 +1085,27 @@ scoreInterval = setInterval(() => {
     }
 
     if (Session.score == 0) {
-        cactusAnimationDuration = "3s";
+        cactusAnimationDuration = 3;
         cactusIntervalDuration = 1750;
         cactusIntervalDurationRandomness = 1000;
     
     } else if (Session.score == 50) {
-        cactusAnimationDuration = "2.5s";
+        cactusAnimationDuration = 2.5;
         cactusIntervalDuration = 1500;
         cactusIntervalDurationRandomness = 1000;
 
     } else if (Session.score == 100) {
-        cactusAnimationDuration = "2.3s";
+        cactusAnimationDuration = 2.3;
         cactusIntervalDuration = 1250;
         cactusIntervalDurationRandomness = 1000;
 
     } else if (Session.score == 500) {
-        cactusAnimationDuration = "2.1s";
+        cactusAnimationDuration = 2.1;
         cactusIntervalDuration = 1000;
         cactusIntervalDurationRandomness = 500;
 
     } else if (Session.score == 1000) {
-        cactusAnimationDuration = "2s";
+        cactusAnimationDuration = 2;
         cactusIntervalDuration = 1000;
         cactusIntervalDurationRandomness = 1000;
 
@@ -935,7 +1117,7 @@ function spawnCactus() {
         const cactus = document.createElement('div');
         cactus.classList.add("cacto");
         cactus.innerText = cactusTexture;
-        cactus.style.animationDuration = cactusAnimationDuration;
+        cactus.style.animationDuration = `${cactusAnimationDuration + (Math.random() * cactusAnimationDurationRandomness)}s`;
         board.appendChild(cactus);
         setTimeout(() => {
             if (!gameStarted) return;
@@ -957,17 +1139,22 @@ function spawnCloud() {
         cloud.innerText = cloudTexture;
 
         // posição vertical aleatória
-        const top = Math.random() * 100 + 20; // entre 20px e 120px
-        cloud.style.top = `${top}px`;
+        const top = Math.random() * 50 + 40;
+        cloud.style.setProperty("--cloud-top", `${top}px`);
 
-        cloud.style.animationDuration = cloudAnimationDuration;
+        cloud.style.animationDuration = `${cloudAnimationDuration + (Math.random() * cloudAnimationDurationRandomness)}s`;
 
         board.appendChild(cloud);
 
         // remover depois de um tempo
-        setTimeout(() => {
+        const cb = () => {
+            if (cloud.classList.contains("paused")) {
+                setTimeout(cb, 1000);
+                return;
+            }
             cloud.remove();
-        }, 20000);
+        }
+        setTimeout(cb, 20_000);
     }
 
     const randomTime = Math.random() * cloudIntervalDurationRandomness + cloudIntervalDuration;
@@ -981,7 +1168,7 @@ function checkCollision() {
     cactuses.forEach((cactus) => {
         const cactusRect = cactus.getBoundingClientRect();
         const hitbox = {
-            top: 20,
+            top: 10,
             bottom: 15,
             left: 30,
             right: 30

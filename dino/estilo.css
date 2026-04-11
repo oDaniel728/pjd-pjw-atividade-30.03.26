@@ -1,7 +1,9 @@
 :root {
-    --background-color: #87CEEB;;
+    --background-color1: #87CEEB;
+    --background-color2: #1fa4d9;
     --ground-color1: #C4A95A;
-    --ground-color2: #8B7355;
+    --ground-color2: #b48f62;
+    --ground-color3: #8B7355;
 }
 
 /* =========================================================
@@ -39,7 +41,8 @@ body {
 #game-board {
     width: 800px;                        /* Largura fixa da área do jogo */
     height: 300px;                       /* Altura fixa da área do jogo */
-    background-color: var(--background-color);/* Cor azul-céu para o fundo */
+    background: linear-gradient(var(--background-color1), var(--background-color2)); /* Fundo com gradiente */
+    
     position: relative;                  /* Referência para elementos posicionados com absolute */
     overflow: hidden;                    /* Esconde o que sair fora da área do jogo */
     margin: 20px auto;                   /* Espaço externo em cima/baixo e centralização horizontal */
@@ -59,8 +62,9 @@ body {
     left: 0;                         /* Começa na borda esquerda */
     right: 0;                        /* Vai até a borda direita */
     height: 50px;                    /* Altura do chão */
-    background-color: var(--ground-color1);       /* Cor de terra */
-    border-top: 4px solid var(--ground-color2);   /* Linha superior para destacar o solo */
+    background: linear-gradient(var(--ground-color1), var(--ground-color2)); /* Fundo com gradiente para o chão */
+    
+    border-top: 4px solid var(--ground-color3);   /* Linha superior para destacar o solo */
 }
 
 /* =========================================================
@@ -75,8 +79,18 @@ body {
     font-size: 50px;         /* Tamanho do caractere/emoji do dinossauro */
     line-height: 1;          /* Remove espaçamento extra vertical da linha */
     z-index: 2;              /* Coloca o dinossauro na frente de alguns elementos */
-    transform: scaleX(-1);
+    --flip-x: 1;
+    --flip-y: 1;
+    --rotation: 0deg;
+    scale: var(--flip-x) var(--flip-y);
+    transform: rotate(var(--rotation));
     /* Animação de pulo (desativada por enquanto) */
+}
+.flipX {
+    --flip-x: -1;
+}
+.flipY {
+    --flip-y: -1;
 }
 
 /* =========================================================
@@ -87,10 +101,10 @@ Faz o dinossauro subir e depois voltar ao chão.
 
 @keyframes rotate-anim {
     0% {
-        transform: scaleX(-1) rotate(0deg);
+        transform: rotate(var(--rotation));
     }
     100% {
-        transform: scaleX(-1) rotate(-360deg);
+        transform: rotate(calc(var(--rotation) - 180deg));
     }
 }
 
@@ -157,7 +171,7 @@ Faz o dinossauro subir e depois voltar ao chão.
    ========================================================= */
 .nuvem {
     position: absolute;                        /* Posicionamento dentro do palco */
-    top: 30px;                                 /* Distância do topo */
+    top: var(--cloud-top, 30px);               /* Distância base do topo */
     right: -100px;                             /* Começa fora da tela */
     font-size: 60px;                           /* Tamanho do emoji/ícone da nuvem */
     color: #fff;                               /* Cor branca */
@@ -166,7 +180,8 @@ Faz o dinossauro subir e depois voltar ao chão.
     animation: 
         mover-nuvem linear forwards,
         mover-nuvem-y 4s linear infinite;
-    ;/* Movimento contínuo e lento */
+    
+        ;/* Movimento contínuo e lento */
 }
 
 /* =========================================================
@@ -180,13 +195,13 @@ Faz o dinossauro subir e depois voltar ao chão.
 }
 @keyframes mover-nuvem-y {
     0% {
-        top: 0;
+        top: calc(var(--cloud-top, 30px) - 10px);
     }
     50% {
-        top: 20px;
+        top: calc(var(--cloud-top, 30px) + 20px);
     }
     100% {
-        top: 0;
+        top: calc(var(--cloud-top, 30px) - 10px);
     }
 }
 
@@ -208,6 +223,7 @@ Faz o dinossauro subir e depois voltar ao chão.
     display: flex;                        /* Organiza os itens em linha */
     justify-content: flex-end;            /* Alinha conteúdo à direita */
     gap: 20px;                            /* Espaçamento entre os itens */
+    align-items: center;
 }
 
 /* Estilo para partes do placar que precisam de destaque */
@@ -288,4 +304,24 @@ Faz o dinossauro subir e depois voltar ao chão.
 
 .paused {
     animation-play-state: paused;
+}
+
+.placar >.side {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(0, 0, 0, .5);
+    padding: 3px;
+    border-radius: 5px;
+}
+
+*[data-config] {
+    cursor: pointer;
+    scale: 1.5;
+    color: gray;
+    margin: 0 5px;
+}
+
+*[data-config]:hover {
+    color: white !important;
 }

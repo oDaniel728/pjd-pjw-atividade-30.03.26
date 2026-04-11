@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dino</title>
     <link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 <body>
     <!-- AUDIOS -->
@@ -12,6 +13,24 @@
     <audio track name="bgm"></audio>
 
     <div class="placar">
+        <div class="side">
+            <div class="config" data-config="bgmActivated">
+                <div class="activated">
+                    <i class="bi bi-volume-up-fill"></i>
+                </div>
+                <div class="deactivated">
+                    <i class="bi bi-volume-mute"></i>
+                </div>
+            </div>
+            <div class="config" data-config="sfxActivated">
+                <div class="activated">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+                <div class="deactivated">
+                    <i class="bi bi-bell-slash"></i>
+                </div>
+            </div>
+        </div>
         <p><span class="score-show">...</span><p>HI: <span id="max-score">.....</span> </p> 
     </div>
 
@@ -23,7 +42,7 @@
 
     <div id="game-board">
         <div class="nuvem">&#9729</div>
-        <div class="dino">🦖</div>
+        <div class="flipX dino">🦖</div>
         <!-- <div class="cacto">🌵</div> -->
         <div class="chao"></div>
     </div>
