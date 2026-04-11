@@ -827,8 +827,8 @@ let cloudIntervalDurationRandomness = 500;
 let cloudScale = 1;
 let cloudScaleRandomness = 1;
 let dinoRotation = 0;
-let daynightCycleDuration = 10;
-let scoreIntervalDuration = 0.10;
+const daynightCycleDuration = 30;
+const scoreIntervalDuration = 0.10;
 
 let cactusTexture = "🌵";
 let dinoTexture = "🦖";
@@ -928,7 +928,7 @@ const ThemeSystem = {
         {
             name: "sky",
             textures: { cactus: "🦖", dino: "🌵", cloud: "☀️" },
-            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            sun: { day: "☀️", sunset: "⛅", night: "🌙" },
             variants: {
                 day: { bg1: "#C4A95A", bg2: "#8B7355", gr1: "#87CEEB", gr2: "#528db7", gr3: "#2b527c" },
                 sunset: { bg1: "#FF8C42", bg2: "#E63946", gr1: "#F1A208", gr2: "#D62828", gr3: "#A4161A" },
@@ -938,7 +938,7 @@ const ThemeSystem = {
         {
             name: "neon",
             textures: { cactus: "🔺", dino: "🟨", cloud: "⬜◽" },
-            sun: { day: "⭐", sunset: "🔆", night: "✨" },
+            sun: { day: "", sunset: "", night: "" },
             variants: {
                 day: { bg1: "#6797fe", bg2: "#3a5fb0", gr1: "#8250eb", gr2: "#4e2673", gr3: "#2b1340" },
                 sunset: { bg1: "#FF6B6B", bg2: "#FFA500", gr1: "#FF4D6D", gr2: "#C1121F", gr3: "#780000" },
@@ -948,7 +948,7 @@ const ThemeSystem = {
         {
             name: "dark",
             textures: { cactus: "🔥", dino: "💧", cloud: "☁️" },
-            sun: { day: "💡", sunset: "🔥", night: "🌙" },
+            sun: { day: "", sunset: "", night: "" },
             variants: {
                 day: { bg1: "#00002d", bg2: "#020215", gr1: "#aaaaaa", gr2: "#333333", gr3: "#111111" },
                 sunset: { bg1: "#1a051e", bg2: "#36052c", gr1: "#E8B4B8", gr2: "#A0616D", gr3: "#5D3E3E" },
@@ -958,7 +958,7 @@ const ThemeSystem = {
         {
             name: "forest",
             textures: { cactus: "🌳", dino: "🦕", cloud: "🌧️" },
-            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            sun: { day: "☀️", sunset: "⛅", night: "🌙" },
             variants: {
                 day: { bg1: "#201f2d", bg2: "#39365a", gr1: "#03491b", gr2: "#003000", gr3: "#001800" },
                 sunset: { bg1: "#3D2817", bg2: "#5C3D2E", gr1: "#8B4513", gr2: "#654321", gr3: "#4A2511" },
@@ -968,7 +968,7 @@ const ThemeSystem = {
         {
             name: "default",
             textures: { cactus: "🌵", dino: "🦖", cloud: "☁️" },
-            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            sun: { day: "☀️", sunset: "⛅", night: "🌙" },
             variants: {
                 day: { bg1: "#87CEEB", bg2: "#42afda", gr1: "#C4A95A", gr2: "#8B7355", gr3: "#654321" },
                 sunset: { bg1: "#FF6B6B", bg2: "#FF8C42", gr1: "#FFA500", gr2: "#FF6347", gr3: "#DC143C" },
