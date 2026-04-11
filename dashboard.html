@@ -573,10 +573,11 @@
                         
                         partidas.forEach(partida => {
                             const data = new Date(partida.data).toLocaleDateString('pt-BR');
+                            const score = partida.score ?? partida.max_score ?? 0;
                             html += `
             <tr>
                 <td>${data}</td>
-                <td><strong>${partida.score}</strong></td>
+                <td><strong>${score}</strong></td>
                 <td><strong>${partida.total_score}</strong></td>
                 <td><strong>${partida.max_score}</strong></td>
                 <td><strong>${partida.nivel}</strong></td>
@@ -707,11 +708,12 @@
 
                 dados.forEach(partida => {
                     const data = new Date(partida.data).toLocaleString('pt-BR');
+                    const score = partida.score ?? partida.max_score ?? 0;
 
                     html += `
                     <tr>
                         <td>${data}</td>
-                        <td><strong>${partida.score}</strong></td>
+                        <td><strong>${score}</strong></td>
                         <td>${partida.total_score}</td>
                         <td>${partida.max_score}</td>
                         <td>${partida.nivel}</td>

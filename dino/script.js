@@ -39,6 +39,7 @@ async function saveUserData() {
 
     const total = Session.total_score;
     const max = Session.max_score;
+    const score = Session.score;
     const nivel = Math.floor(total / 500) + 1;
 
     const data = {
@@ -47,6 +48,7 @@ async function saveUserData() {
         max_score: max,
         nivel: nivel,
         rounds: Session.rounds,
+        score: score
     }
 
     // 1. dados principais do usuário
