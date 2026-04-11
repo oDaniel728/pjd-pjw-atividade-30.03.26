@@ -4,6 +4,7 @@
     --ground-color1: #C4A95A;
     --ground-color2: #b48f62;
     --ground-color3: #8B7355;
+    --daynight-cycle-duration: 50s;
 
     --exponential-out: cubic-bezier(.17,.67,.54,1);
 
@@ -234,8 +235,8 @@ Faz o dinossauro subir e depois voltar ao chão.
     justify-content: center;
     z-index: 0;
     animation: 
-        orbita-x 50s linear infinite,
-        orbita-y 50s infinite
+        orbita-x var(--daynight-cycle-duration) linear infinite,
+        orbita-y var(--daynight-cycle-duration) infinite
 
     ;
 }

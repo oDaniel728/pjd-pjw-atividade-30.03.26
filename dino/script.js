@@ -827,6 +827,8 @@ let cloudIntervalDurationRandomness = 500;
 let cloudScale = 1;
 let cloudScaleRandomness = 1;
 let dinoRotation = 0;
+let daynightCycleDuration = 10;
+let scoreIntervalDuration = 0.10;
 
 let cactusTexture = "🌵";
 let dinoTexture = "🦖";
@@ -838,6 +840,22 @@ const defaultBackgroundColor2 = getCSSVariable("background-color2");
 const defaultGroundColor1 = getCSSVariable("ground-color1");
 const defaultGroundColor2 = getCSSVariable("ground-color2");
 const defaultGroundColor3 = getCSSVariable("ground-color3");
+
+function applyDayNightCycleDuration() {
+    changeCSSVariable("daynight-cycle-duration", `${daynightCycleDuration}s`);
+}
+
+/**
+ * Quantidade de pontos para trocar de turno (day -> sunset -> night)
+ * baseada em: pontos por segundo * segundos por turno.
+ * @returns {number}
+ */
+function getPointsPerTurn() {
+    if (scoreIntervalDuration <= 0) return 1;
+    return Math.max(1, Math.round(daynightCycleDuration / scoreIntervalDuration));
+}
+
+applyDayNightCycleDuration();
 
 console.log(dadosUsuario)
 
@@ -995,8 +1013,12 @@ const ThemeSystem = {
      * @returns {string}
      */
     getVariantForScore(score) {
-        if (score >= 1000) return "night";
-        if (score >= 500) return "sunset";
+        const pointsPerTurn = getPointsPerTurn();
+        const cyclePoints = pointsPerTurn * 3;
+        const cycleScore = score % cyclePoints;
+
+        if (cycleScore >= pointsPerTurn * 2) return "night";
+        if (cycleScore >= pointsPerTurn) return "sunset";
         return "day";
     },
 
@@ -1080,6 +1102,7 @@ function processTextures() {
 function startGame() {
     once();
     processTextures();
+    applyDayNightCycleDuration();
 
     gameStarted = true;
     Session.score = 0;
@@ -1255,7 +1278,7 @@ scoreInterval = setInterval(() => {
         cactusIntervalDurationRandomness = 1000;
 
     }
-}, 100);
+}, 1000 * scoreIntervalDuration);
 
 function spawnCactus() {
     if (gameStarted && !isGameOver) {
