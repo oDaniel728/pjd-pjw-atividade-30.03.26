@@ -636,6 +636,7 @@ Config.load();
 
 Config.setDefault("bgmActivated", true);
 Config.setDefault("sfxActivated", true);
+Config.setDefault("scoreSounds", true);
 
 const Session = {
     temporary: ["temporary", "score", "auto_saving", "loaded"],
@@ -691,6 +692,8 @@ const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 const configElements = document.querySelectorAll("[data-config]");
 
+let solElement = null;
+
 /** 
  * @param   { string } name
  * @param   { any } value
@@ -712,6 +715,7 @@ function getCSSVariable(name, el = document.documentElement) {
 }
 const sfxTrack = AudioService.getAudioTrack("sfx");
 const bgmTrack = AudioService.getAudioTrack("bgm");
+const scoTrack = AudioService.getAudioTrack("sco");
 const defaultSfxVolume = 0.5;
 const defaultBgmVolume = 0.2;
 
@@ -757,6 +761,11 @@ function applyConfigEffect(key, value) {
 
     if (key === "sfxActivated") {
         AudioService.setTrackVolume("sfx", value ? defaultSfxVolume : 0);
+        return;
+    }
+
+    if (key === "scoreSounds") {
+        AudioService.setTrackVolume("sco", value ? 0.6 : 0);
     }
 }
 
@@ -891,66 +900,180 @@ function once() {
     if (musicPlaying) return;
     startBackgroundMusic();
 }
+
+// [[ THEME SYSTEM ]]
+const ThemeSystem = {
+    currentThemeIndex: -1,
+    currentVariant: "day", // "day", "sunset", "night"
+
+    themes: [
+        {
+            name: "sky",
+            textures: { cactus: "🦖", dino: "🌵", cloud: "☀️" },
+            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            variants: {
+                day: { bg1: "#C4A95A", bg2: "#8B7355", gr1: "#87CEEB", gr2: "#528db7", gr3: "#2b527c" },
+                sunset: { bg1: "#FF8C42", bg2: "#E63946", gr1: "#F1A208", gr2: "#D62828", gr3: "#A4161A" },
+                night: { bg1: "#1a1a2e", bg2: "#16213e", gr1: "#4a5568", gr2: "#2d3748", gr3: "#1a202c" }
+            }
+        },
+        {
+            name: "neon",
+            textures: { cactus: "🔺", dino: "🟨", cloud: "⬜◽" },
+            sun: { day: "⭐", sunset: "🔆", night: "✨" },
+            variants: {
+                day: { bg1: "#6797fe", bg2: "#3a5fb0", gr1: "#8250eb", gr2: "#4e2673", gr3: "#2b1340" },
+                sunset: { bg1: "#FF6B6B", bg2: "#FFA500", gr1: "#FF4D6D", gr2: "#C1121F", gr3: "#780000" },
+                night: { bg1: "#0a0e27", bg2: "#16213e", gr1: "#5a189a", gr2: "#3c096c", gr3: "#240046" }
+            }
+        },
+        {
+            name: "dark",
+            textures: { cactus: "🔥", dino: "💧", cloud: "☁️" },
+            sun: { day: "💡", sunset: "🔥", night: "🌙" },
+            variants: {
+                day: { bg1: "#00002d", bg2: "#020215", gr1: "#aaaaaa", gr2: "#333333", gr3: "#111111" },
+                sunset: { bg1: "#1a051e", bg2: "#36052c", gr1: "#E8B4B8", gr2: "#A0616D", gr3: "#5D3E3E" },
+                night: { bg1: "#000000", bg2: "#0a0a0a", gr1: "#555555", gr2: "#222222", gr3: "#050505" }
+            }
+        },
+        {
+            name: "forest",
+            textures: { cactus: "🌳", dino: "🦕", cloud: "🌧️" },
+            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            variants: {
+                day: { bg1: "#201f2d", bg2: "#39365a", gr1: "#03491b", gr2: "#003000", gr3: "#001800" },
+                sunset: { bg1: "#3D2817", bg2: "#5C3D2E", gr1: "#8B4513", gr2: "#654321", gr3: "#4A2511" },
+                night: { bg1: "#0d1b0f", bg2: "#1a2e1b", gr1: "#001a00", gr2: "#000d00", gr3: "#000400" }
+            }
+        },
+        {
+            name: "default",
+            textures: { cactus: "🌵", dino: "🦖", cloud: "☁️" },
+            sun: { day: "☀️", sunset: "🌅", night: "🌙" },
+            variants: {
+                day: { bg1: "#87CEEB", bg2: "#42afda", gr1: "#C4A95A", gr2: "#8B7355", gr3: "#654321" },
+                sunset: { bg1: "#FF6B6B", bg2: "#FF8C42", gr1: "#FFA500", gr2: "#FF6347", gr3: "#DC143C" },
+                night: { bg1: "#1a1a2e", bg2: "#0f3460", gr1: "#8B7355", gr2: "#5D3E3E", gr3: "#2d1810" }
+            }
+        }
+    ],
+
+    /**
+     * Seleciona um tema e armazena o índice
+     * @param {number} themeIndex
+     */
+    selectTheme(themeIndex) {
+        this.currentThemeIndex = themeIndex;
+        this.applyVariant("day");
+    },
+
+    /**
+     * Aplica uma variante do tema atual
+     * @param {string} variant
+     */
+    applyVariant(variant) {
+        if (this.currentThemeIndex < 0 || !this.themes[this.currentThemeIndex]) return;
+
+        const theme = this.themes[this.currentThemeIndex];
+        const colors = theme.variants[variant];
+
+        if (!colors) return;
+
+        this.currentVariant = variant;
+
+        changeCSSVariable("background-color1", colors.bg1);
+        changeCSSVariable("background-color2", colors.bg2);
+        changeCSSVariable("ground-color1", colors.gr1);
+        changeCSSVariable("ground-color2", colors.gr2);
+        changeCSSVariable("ground-color3", colors.gr3);
+    },
+
+    /**
+     * Determina a variante baseada no score
+     * @param {number} score
+     * @returns {string}
+     */
+    getVariantForScore(score) {
+        if (score >= 1000) return "night";
+        if (score >= 500) return "sunset";
+        return "day";
+    },
+
+    /**
+     * Obtém os textures do tema atual
+     * @returns {Object}
+     */
+    getCurrentTextures() {
+        if (this.currentThemeIndex < 0) return null;
+        return this.themes[this.currentThemeIndex].textures;
+    },
+
+    /**
+     * Obtém o emoji do sol/lua para a variante atual
+     * @returns {string}
+     */
+    getCurrentSun() {
+        if (this.currentThemeIndex < 0) return "☀️";
+        const theme = this.themes[this.currentThemeIndex];
+        if (!theme.sun) return "☀️";
+        return theme.sun[this.currentVariant] || "☀️";
+    }
+};
+
+/**
+ * Atualiza a variante do tema baseada no score
+ * @param {number} score
+ */
+function updateThemeVariant(score) {
+    const targetVariant = ThemeSystem.getVariantForScore(score);
+    if (targetVariant !== ThemeSystem.currentVariant) {
+        ThemeSystem.applyVariant(targetVariant);
+        updateThemeSun();
+    }
+}
+
+/**
+ * Atualiza o emoji do sol/lua baseado na variante atual
+ * @returns {void}
+ */
+function updateThemeSun() {
+    if (!solElement) return;
+    solElement.innerText = ThemeSystem.getCurrentSun();
+}
+
 function processTextures() {
     const c = Math.random() * 100;
     
+    let themeIndex;
+    // Default reset
     cactusTexture = "🌵";
     dinoTexture = "🦖";
     cloudTexture = "☁️";
 
-    changeCSSVariable("background-color1", defaultBackgroundColor1);
-    changeCSSVariable("background-color2", defaultBackgroundColor2);
-    changeCSSVariable("ground-color1", defaultGroundColor1);
-    changeCSSVariable("ground-color2", defaultGroundColor2);
-    changeCSSVariable("ground-color3", defaultGroundColor3);
-
-    // --background-color: #87CEEB;;
-    // --ground-color1: #C4A95A;
-    // --ground-color2: #8B7355;
     if (c < 5) {
-        cactusTexture = "🦖";
-        dinoTexture = "🌵";
-        cloudTexture = "☀️";
-        
-        changeCSSVariable("background-color1", "#C4A95A");
-        changeCSSVariable("background-color2", "#8B7355");
-        changeCSSVariable("ground-color1", "#87CEEB");
-        changeCSSVariable("ground-color2", "#528db7");
-        changeCSSVariable("ground-color3", "#2b527c");
-    } else
-    if (c < 10) {
-        cactusTexture = "🔺";
-        dinoTexture = "🟨";
-        cloudTexture = "⬜◽";
-        
-        changeCSSVariable("background-color1", "#6797fe");
-        changeCSSVariable("background-color2", "#3a5fb0");
-        changeCSSVariable("ground-color1", "#8250eb");
-        changeCSSVariable("ground-color2", "#4e2673");
-        changeCSSVariable("ground-color3", "#2b1340");
-    } else
-    if (c < 15) {
-        cactusTexture = "🔥";
-        dinoTexture = "💧";
-        cloudTexture = "☁️";
-
-        changeCSSVariable("background-color1", "#00002d");
-        changeCSSVariable("background-color2", "#020215");
-        changeCSSVariable("ground-color1", "#aaaaaa");
-        changeCSSVariable("ground-color2", "#333333");
-        changeCSSVariable("ground-color3", "#111111");
-    } else
-    if (c < 35) {
-        cactusTexture = "🌳";
-        dinoTexture = "🦕";
-        cloudTexture = "🌧️";
-
-        changeCSSVariable("background-color1", "#201f2d");
-        changeCSSVariable("background-color2", "#39365a");
-        changeCSSVariable("ground-color1", "#03491b");
-        changeCSSVariable("ground-color2", "#003000");
-        changeCSSVariable("ground-color3", "#001800");
+        themeIndex = 0; // sky
+    } else if (c < 10) {
+        themeIndex = 1; // neon
+    } else if (c < 15) {
+        themeIndex = 2; // dark
+    } else if (c < 35) {
+        themeIndex = 3; // forest
+    } else {
+        themeIndex = 4; // default
     }
+
+    // Seleciona o tema e aplica (começa com "day")
+    ThemeSystem.selectTheme(themeIndex);
+    
+    // Aplica os textures do tema
+    const textures = ThemeSystem.getCurrentTextures();
+    if (textures) {
+        cactusTexture = textures.cactus;
+        dinoTexture = textures.dino;
+        cloudTexture = textures.cloud;
+    }
+
     dino.innerText = dinoTexture;
     nuvem.innerText = cloudTexture;
 }   
@@ -963,6 +1086,16 @@ function startGame() {
     Session.rounds++;
     dinoRotation = 0;
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
+    
+    // Criar elemento do sol
+    if (solElement) {
+        solElement.remove();
+    }
+    solElement = document.createElement('div');
+    solElement.classList.add('sol');
+    solElement.innerText = ThemeSystem.getCurrentSun();
+    board.appendChild(solElement);
+    
     document
         .querySelectorAll(".paused")
         .forEach(el => {
@@ -1024,6 +1157,9 @@ function handleGameOver() {
         .forEach(c => {
             c.classList.add("paused");
         });
+    if (solElement) {
+        solElement.classList.add("paused");
+    }
     dino.classList.add("paused");
     AudioService.playAudio("hit", sfxTrack);
     gameOverMsg.classList.remove('hidden');
@@ -1066,7 +1202,16 @@ scoreInterval = setInterval(() => {
     maxScoreElement.innerText = Session.max_score.toString().padStart(5, '0');
     
     if (!gameStarted || isGameOver) return;
+    
+    const prevScore = Session.score;
     Session.score++;
+                 
+    // Atualiza a variante do tema baseada no score
+    updateThemeVariant(Session.score);
+    
+    if (getBooleanConfig("scoreSounds") && Session.score % 100 === 0) {
+        AudioService.playAudio("score", scoTrack);
+    }
     
     if (Session.score > Session.max_score) {
         if (!maxScoreElement.classList.contains("green")) {

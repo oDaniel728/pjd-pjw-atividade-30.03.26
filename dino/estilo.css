@@ -4,6 +4,11 @@
     --ground-color1: #C4A95A;
     --ground-color2: #b48f62;
     --ground-color3: #8B7355;
+
+    --exponential-out: cubic-bezier(.17,.67,.54,1);
+
+    --exponential-in: cubic-bezier(.14,0,.82,.41);
+
 }
 
 /* =========================================================
@@ -49,6 +54,9 @@ body {
     border: 3px solid #555;            /* Borda cinza escura ao redor do palco */
     border-radius: 5px;                  /* Cantos levemente arredondados */
     box-shadow: 0 0 20px rgba(0,0,0,0.5);/* Sombra para dar destaque visual */
+    transition: background 2s ease-in-out; /* Transição suave para mudanças de fundo (ex: dia/noite) */
+    
+    will-change: background;             /* Otimiza a renderização para mudanças de background */
 }
 
 /* =========================================================
@@ -65,6 +73,10 @@ body {
     background: linear-gradient(var(--ground-color1), var(--ground-color2)); /* Fundo com gradiente para o chão */
     
     border-top: 4px solid var(--ground-color3);   /* Linha superior para destacar o solo */
+    transition: background 2s ease-in-out, border-top 2s ease-in-out; /* Transição suave para mudanças de cor do chão (ex: dia/noite) */
+    
+    will-change: background, border-top;         /* Otimiza a renderização */
+    z-index: 10;
 }
 
 /* =========================================================
@@ -78,7 +90,7 @@ body {
     left: 80px;              /* Distância da borda esquerda */
     font-size: 50px;         /* Tamanho do caractere/emoji do dinossauro */
     line-height: 1;          /* Remove espaçamento extra vertical da linha */
-    z-index: 2;              /* Coloca o dinossauro na frente de alguns elementos */
+    z-index: 99;              /* Coloca o dinossauro na frente de alguns elementos */
     --flip-x: 1;
     --flip-y: 1;
     --rotation: 0deg;
@@ -115,11 +127,11 @@ Faz o dinossauro subir e depois voltar ao chão.
 @keyframes pular {
     0%   { 
         bottom: 50px;
-        animation-timing-function: cubic-bezier(.17,.67,.54,1); /* Exponential out */
+        animation-timing-function: cubic-bezier(.17,.67,.54,1);
     }   /* Começa no chão */
     50%  { 
         bottom: 150px; 
-        animation-timing-function: cubic-bezier(.14,0,.82,.41); /* Exponential in */
+        animation-timing-function: cubic-bezier(.14,0,.82,.41);
     }  /* Sobe até 150px */
     100% { 
         bottom: 50px; 
@@ -142,7 +154,7 @@ Faz o dinossauro subir e depois voltar ao chão.
     right: -60px;                              /* Começa fora da tela, à direita */
     font-size: 45px;                           /* Tamanho do caractere/emoji do cacto */
     line-height: 1;                            /* Remove espaçamento vertical extra */
-    z-index: 1;                                /* Fica atrás do dinossauro */
+    z-index: 5;                                /* Fica atrás do dinossauro */
     animation: mover-cacto linear forwards; /* Movimento contínuo do cacto */
 }
 
@@ -176,7 +188,7 @@ Faz o dinossauro subir e depois voltar ao chão.
     font-size: 60px;                           /* Tamanho do emoji/ícone da nuvem */
     color: #fff;                               /* Cor branca */
     opacity: 0.8;                              /* Leve transparência */
-    z-index: 0;                                /* Fica mais ao fundo */
+    z-index: 3;                                /* Fica mais ao fundo */
     animation: 
         mover-nuvem linear forwards,
         mover-nuvem-y 4s linear infinite;
@@ -203,6 +215,51 @@ Faz o dinossauro subir e depois voltar ao chão.
     100% {
         top: calc(var(--cloud-top, 30px) - 10px);
     }
+}
+
+/* =========================================================
+   SOL / LUA
+   ---------------------------------------------------------
+   Elemento que orbita ao redor do cenário, representando
+   o ciclo dia/noite. De dia é sol (☀️), de sunset é
+   transição, e de noite é lua (🌙).
+   ========================================================= */
+.sol {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    font-size: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+    animation: 
+        orbita-x 50s linear infinite,
+        orbita-y 50s infinite
+
+    ;
+}
+
+@keyframes orbita-x { /* 0% - esquerda -> 100% - direita */
+    /* move apenas o eixo x do sol */
+    0% { left: 100px; }
+    100% { left: 700px; }
+}
+@keyframes orbita-y { /* 0% - baixo -> 50% - cima -> 100% - baixo */
+    /* move apenas o eixo y do sol para criar um movimento de arco */
+    0% { 
+        top: 250px; 
+        animation-timing-function: cubic-bezier(.17,.67,.54,1);
+    }
+    50% { 
+        top: 50px;
+        animation-timing-function: cubic-bezier(.14,0,.82,.41);
+    }
+    100% { top: 250px; }
+}
+
+.sol.paused {
+    animation-play-state: paused;
 }
 
 /* =========================================================
