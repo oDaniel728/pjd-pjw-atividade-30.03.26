@@ -31,6 +31,30 @@
         .table-primary {
             --bs-table-bg: rgba(0, 128, 55, 0.1);
         }
+        .rank-badge {
+            position: absolute;
+            top: -0.45em;
+            right: -0em;
+            font-size: 2em;
+            line-height: 1;
+            transform: translate(35%, -20%);
+            pointer-events: none;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+        .rank-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding-right: 0.75em;
+        }
+        .rank-icon:hover .rank-badge {
+            transform: translate(35%, -20%) translateY(-4px);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+        }
+        .rank-icon .rank-badge {
+            pointer-events: auto;
+            cursor: pointer;
+        }
         iframe {
             width: 100%;
             height: 100%;
@@ -133,11 +157,12 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-subtitle mb-2">Pontuação Total</h6>
+                                            <h6 class="card-subtitle mb-2" id="cardTitleTotal">Pontuação Total</h6>
                                             <h2 class="card-title mb-0" id="userPontuacao">0</h2>
                                         </div>
-                                        <div class="icon">
+                                        <div class="icon rank-icon d-flex align-items-center gap-2">
                                             <i class="fas fa-star"></i>
+                                            <span class="rank-badge" id="cardBadgeTotal"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -149,11 +174,12 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-subtitle mb-2">Pontuação Máxima</h6>
+                                            <h6 class="card-subtitle mb-2" id="cardTitleMax">Pontuação Máxima</h6>
                                             <h2 class="card-title mb-0" id="userPontuacaoMax">0</h2>
                                         </div>
-                                        <div class="icon">
+                                        <div class="icon rank-icon d-flex align-items-center gap-2">
                                             <i class="fas fa-bolt"></i>
+                                            <span class="rank-badge" id="cardBadgeMax"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -165,11 +191,12 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-subtitle mb-2">Nível</h6>
+                                            <h6 class="card-subtitle mb-2" id="cardTitleNivel">Nível</h6>
                                             <h2 class="card-title mb-0" id="userNivel">1</h2>
                                         </div>
-                                        <div class="icon">
+                                        <div class="icon rank-icon d-flex align-items-center gap-2">
                                             <i class="fas fa-level-up-alt"></i>
+                                            <span class="rank-badge" id="cardBadgeNivel"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -177,15 +204,16 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="card stat-card bg-warning text-dark">
+                            <div class="card stat-card bg-info text-dark">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-subtitle mb-2">Rounds</h6>
+                                            <h6 class="card-subtitle mb-2" id="cardTitleRounds">Rounds</h6>
                                             <h2 class="card-title mb-0" id="userRounds">0</h2>
                                         </div>
-                                        <div class="icon">
+                                        <div class="icon rank-icon d-flex align-items-center gap-2">
                                             <i class="fas fa-gamepad"></i>
+                                            <span class="rank-badge" id="cardBadgeRounds"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -218,7 +246,52 @@
                             <div id="historicoPartidas">
                                 <p class="text-muted text-center">Nenhuma partida ainda. Comece a jogar!</p>
                             </div>
+                            <div class="text-center mt-3">
+                                <button class="btn btn-outline-primary" type="button" data-section="historico">
+                                    Ver Mais
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Seção Jogos -->
+                <section id="section-jogar" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-gamepad me-2"></i>Jogos
+                        </h1>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card stat-card bg-dark text-white h-100">
+                                <div class="card-body d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h5 class="card-title mb-2">Jogo do Dino</h5>
+                                        <p class="card-text mb-0">Abra o clássico desafio do dinossauro e tente bater sua melhor pontuação.</p>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button class="btn btn-success text-light fw-semibold" type="button" id="btnJogoDino">
+                                            Jogar agora
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção Configurações -->
+                <section id="section-config" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-cog me-2"></i>Configurações
+                        </h1>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-center" style="min-height: 40vh;">
+                        <p class="text-white fs-3 mb-0">Em breve...</p>
                     </div>
                 </section>
 
@@ -286,6 +359,72 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="rankingTotalBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-xl-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-gamepad me-2"></i>Ranking por Rounds
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-ranking">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Posição</th>
+                                                    <th>Jogador</th>
+                                                    <th>Rounds</th>
+                                                    <th>Pontuação Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingRoundsBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-xl-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-level-up-alt me-2"></i>Ranking por Nível
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-ranking">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Posição</th>
+                                                    <th>Jogador</th>
+                                                    <th>Nível</th>
+                                                    <th>Pontuação Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingNivelBody">
                                                 <tr>
                                                     <td colspan="4" class="text-center py-4">
                                                         <div class="spinner-border text-primary" role="status">
@@ -540,7 +679,9 @@
             onValue(rankingRef, (snapshot) => {
                 const rankingMaxBody = document.getElementById('rankingMaxBody');
                 const rankingTotalBody = document.getElementById('rankingTotalBody');
-                if (!rankingMaxBody || !rankingTotalBody) return;
+                const rankingRoundsBody = document.getElementById('rankingRoundsBody');
+                const rankingNivelBody = document.getElementById('rankingNivelBody');
+                if (!rankingMaxBody || !rankingTotalBody || !rankingRoundsBody || !rankingNivelBody) return;
 
                 const dados = snapshot.val();
 
@@ -553,6 +694,8 @@
                         </tr>`;
                     rankingMaxBody.innerHTML = emptyState;
                     rankingTotalBody.innerHTML = emptyState;
+                    rankingRoundsBody.innerHTML = emptyState;
+                    rankingNivelBody.innerHTML = emptyState;
                     return;
                 }
 
@@ -562,20 +705,76 @@
                         ...item,
                         total_score: Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0),
                         max_score: Number(item.max_score ?? item.pontuacao_max ?? 0),
-                        rounds: Number(item.rounds ?? 0)
+                        rounds: Number(item.rounds ?? 0),
+                        nivel: Number(item.nivel ?? (Math.floor(Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0) / 500) + 1))
                     }));
 
                 const listaMax = [...listaBase].sort((a, b) => b.max_score - a.max_score);
                 const listaTotal = [...listaBase].sort((a, b) => b.total_score - a.total_score);
+                const listaRounds = [...listaBase].sort((a, b) => b.rounds - a.rounds);
+                const listaNivel = [...listaBase].sort((a, b) => Number(b.nivel ?? 0) - Number(a.nivel ?? 0));
+
+                const medalForPosition = (position) => {
+                    if (position === 0) return '🥇';
+                    if (position === 1) return '🥈';
+                    if (position === 2) return '🥉';
+                    return '';
+                };
+
+                const updateHomeCardRank = (titleId, badgeId, baseTitle, position) => {
+                    const titleEl = document.getElementById(titleId);
+                    const badgeEl = document.getElementById(badgeId);
+                    if (!titleEl || !badgeEl) return;
+
+                    if (position >= 0 && position < 15) {
+                        titleEl.textContent = `${baseTitle} (Top ${position + 1})`;
+                        badgeEl.textContent = medalForPosition(position);
+                        badgeEl.hidden = false;
+                        return;
+                    }
+
+                    titleEl.textContent = baseTitle;
+                    badgeEl.textContent = '';
+                    badgeEl.hidden = true;
+                };
+
+                const openRankingSection = () => {
+                    const rankingLink = document.querySelector('a[data-section="ranking"]');
+                    if (rankingLink) {
+                        rankingLink.click();
+                    }
+                };
+
+                document.querySelectorAll('.rank-badge').forEach((badge) => {
+                    if (!(badge instanceof HTMLElement)) return;
+                    badge.setAttribute('role', 'button');
+                    badge.setAttribute('tabindex', '0');
+                    badge.setAttribute('aria-label', 'Abrir seção de ranking');
+
+                    if (badge.dataset.bound === 'true') return;
+                    badge.dataset.bound = 'true';
+
+                    badge.addEventListener('click', openRankingSection);
+                    badge.addEventListener('keydown', (event) => {
+                        if (event.code !== 'Enter' && event.code !== 'Space') return;
+                        event.preventDefault();
+                        openRankingSection();
+                    });
+                });
 
                 const posicaoUsuario = listaTotal.findIndex(item => item.uid === userUid);
                 const userPos = document.getElementById('userPosicao');
                 if (userPos) userPos.textContent = posicaoUsuario >= 0 ? posicaoUsuario + 1 : '-';
 
+                updateHomeCardRank('cardTitleTotal', 'cardBadgeTotal', 'Pontuação Total', listaTotal.findIndex(item => item.uid === userUid));
+                updateHomeCardRank('cardTitleMax', 'cardBadgeMax', 'Pontuação Máxima', listaMax.findIndex(item => item.uid === userUid));
+                updateHomeCardRank('cardTitleNivel', 'cardBadgeNivel', 'Nível', listaNivel.findIndex(item => item.uid === userUid));
+                updateHomeCardRank('cardTitleRounds', 'cardBadgeRounds', 'Rounds', listaRounds.findIndex(item => item.uid === userUid));
+
                 const gerarLinhas = (lista, tipo) => {
                     let html = '';
 
-                    lista.slice(0, 20).forEach((item, index) => {
+                    lista.slice(0, 15).forEach((item, index) => {
                         let medal = '';
                         if (index === 0) medal = '🥇';
                         else if (index === 1) medal = '🥈';
@@ -584,6 +783,32 @@
 
                         const isCurrentUser = item.uid === userUid ? 'table-primary' : '';
                         const pontuacao = tipo === 'max' ? item.max_score : item.total_score;
+                        const rounds = item.rounds ?? 0;
+                        const nivel = Number(item.nivel ?? 0);
+
+                        if (tipo === 'rounds') {
+                            html += `
+                            <tr class="${isCurrentUser}">
+                                <td>${medal}</td>
+                                <td>${item.nome || '-'}</td>
+                                <td><strong>${rounds}</strong></td>
+                                <td><strong>${item.total_score}</strong></td>
+                            </tr>
+                        `;
+                            return;
+                        }
+
+                        if (tipo === 'nivel') {
+                            html += `
+                            <tr class="${isCurrentUser}">
+                                <td>${medal}</td>
+                                <td>${item.nome || '-'}</td>
+                                <td><strong>${nivel}</strong></td>
+                                <td><strong>${item.total_score}</strong></td>
+                            </tr>
+                        `;
+                            return;
+                        }
 
                         html += `
                             <tr class="${isCurrentUser}">
@@ -600,6 +825,8 @@
 
                 rankingMaxBody.innerHTML = gerarLinhas(listaMax, 'max');
                 rankingTotalBody.innerHTML = gerarLinhas(listaTotal, 'total');
+                rankingRoundsBody.innerHTML = gerarLinhas(listaRounds, 'rounds');
+                rankingNivelBody.innerHTML = gerarLinhas(listaNivel, 'nivel');
             });
         }
 
@@ -689,6 +916,10 @@
                 // Mostrar seção correta
                 document.querySelectorAll('.section-content').forEach(s => s.classList.add('d-none'));
                 document.getElementById('section-' + section).classList.remove('d-none');
+
+                if (section === 'historico' && usuarioAtual) {
+                    carregarHistoricoCompleto(usuarioAtual.uid);
+                }
             });
         });
 
@@ -702,6 +933,10 @@
         document.getElementById('btnIniciarJogo').addEventListener('click', () => {
             window.location.href = "/dino/index.html";
         })
+
+        document.getElementById('btnJogoDino').addEventListener('click', () => {
+            window.location.href = "/dino/index.html";
+        });
 
         // Botão atualizar ranking
         document.getElementById('btnAtualizarRanking').addEventListener('click', () => {
