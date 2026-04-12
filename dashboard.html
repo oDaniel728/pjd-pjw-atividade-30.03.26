@@ -233,27 +233,72 @@
                         </button>
                     </div>
 
-                    <div class="table-ranking">
-                        <table class="table table-striped table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Posição</th>
-                                    <th>Jogador</th>
-                                    <th>Pontuação Total</th>
-                                    <th>Máx Máxima</th>
-                                    <th>Rounds</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rankingBody">
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Carregando...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="row g-3">
+                        <div class="col-12 col-xl-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-bolt me-2"></i>Ranking por Pontuação Máxima
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-ranking">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Posição</th>
+                                                    <th>Jogador</th>
+                                                    <th>Pontuação Máxima</th>
+                                                    <th>Rounds</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingMaxBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-xl-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-star me-2"></i>Ranking por Pontuação Total
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-ranking">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Posição</th>
+                                                    <th>Jogador</th>
+                                                    <th>Pontuação Total</th>
+                                                    <th>Rounds</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingTotalBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -493,52 +538,68 @@
             const rankingRef = ref(db, 'ranking');
 
             onValue(rankingRef, (snapshot) => {
-                const rankingBody = document.getElementById('rankingBody');
-                if (!rankingBody) return;
+                const rankingMaxBody = document.getElementById('rankingMaxBody');
+                const rankingTotalBody = document.getElementById('rankingTotalBody');
+                if (!rankingMaxBody || !rankingTotalBody) return;
 
                 const dados = snapshot.val();
 
                 if (!dados) {
-                    rankingBody.innerHTML = `
+                    const emptyState = `
                         <tr>
-                            <td colspan="5" class="text-center py-4">
+                            <td colspan="4" class="text-center py-4">
                                 Nenhum jogador no ranking ainda!
                             </td>
                         </tr>`;
+                    rankingMaxBody.innerHTML = emptyState;
+                    rankingTotalBody.innerHTML = emptyState;
                     return;
                 }
 
-                const lista = Object.entries(dados)
+                const listaBase = Object.entries(dados)
                     .map(([uid, item]) => ({ uid, ...item }))
-                    .sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0));
+                    .map(item => ({
+                        ...item,
+                        total_score: Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0),
+                        max_score: Number(item.max_score ?? item.pontuacao_max ?? 0),
+                        rounds: Number(item.rounds ?? 0)
+                    }));
 
-                const posicaoUsuario = lista.findIndex(item => item.uid === userUid);
+                const listaMax = [...listaBase].sort((a, b) => b.max_score - a.max_score);
+                const listaTotal = [...listaBase].sort((a, b) => b.total_score - a.total_score);
+
+                const posicaoUsuario = listaTotal.findIndex(item => item.uid === userUid);
                 const userPos = document.getElementById('userPosicao');
                 if (userPos) userPos.textContent = posicaoUsuario >= 0 ? posicaoUsuario + 1 : '-';
 
-                let html = '';
+                const gerarLinhas = (lista, tipo) => {
+                    let html = '';
 
-                lista.slice(0, 20).forEach((item, index) => {
-                    let medal = '';
-                    if (index === 0) medal = '🥇';
-                    else if (index === 1) medal = '🥈';
-                    else if (index === 2) medal = '🥉';
-                    else medal = index + 1;
+                    lista.slice(0, 20).forEach((item, index) => {
+                        let medal = '';
+                        if (index === 0) medal = '🥇';
+                        else if (index === 1) medal = '🥈';
+                        else if (index === 2) medal = '🥉';
+                        else medal = index + 1;
 
-                    const isCurrentUser = item.uid === userUid ? 'table-primary' : '';
+                        const isCurrentUser = item.uid === userUid ? 'table-primary' : '';
+                        const pontuacao = tipo === 'max' ? item.max_score : item.total_score;
 
-                    html += `
-                        <tr class="${isCurrentUser}">
-                            <td>${medal}</td>
-                            <td>${item.nome || '-'}</td>
-                            <td><strong>${item.total_score || 0}</strong></td>
-                            <td><strong>${item.max_score || 0}</strong></td>
-                            <td><strong>${item.rounds || 0}</strong></td>
-                        </tr>
-                    `;
-                });
+                        html += `
+                            <tr class="${isCurrentUser}">
+                                <td>${medal}</td>
+                                <td>${item.nome || '-'}</td>
+                                <td><strong>${pontuacao}</strong></td>
+                                <td><strong>${item.rounds}</strong></td>
+                            </tr>
+                        `;
+                    });
 
-                rankingBody.innerHTML = html;
+                    return html;
+                };
+
+                rankingMaxBody.innerHTML = gerarLinhas(listaMax, 'max');
+                rankingTotalBody.innerHTML = gerarLinhas(listaTotal, 'total');
             });
         }
 
