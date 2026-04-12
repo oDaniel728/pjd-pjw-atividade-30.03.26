@@ -1,9 +1,12 @@
-// [[ BD ]]
+/**
+ * Firebase e Autenticação
+ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, update, get, onValue, push, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+/** @type {Object} Configuração do Firebase */
 const firebaseConfig = {
     apiKey: "AIzaSyCBZGph8g79sGTWu5CVynTpeXaUOar-wn8",
     authDomain: "jogos-web-ifam-login-ac5da.firebaseapp.com",
@@ -19,7 +22,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+/** @type {Object|null} Usuário autenticado atual */
 let usuarioAtual = null;
+
+/** @type {Object|null} Dados do usuário carregados do Firebase */
 let dadosUsuario = null;
 
 onAuthStateChanged(auth, async (user) => {
@@ -29,9 +35,15 @@ onAuthStateChanged(auth, async (user) => {
     }
     
     usuarioAtual = user;
-
     await carregarDadosUsuario(user.uid);
 });
+
+/**
+ * Salva os dados do usuário no Firebase
+ * Atualiza usuarios, ranking e histórico
+ * @async
+ * @returns {Promise<void>}
+ */
 async function saveUserData() {
     if (!usuarioAtual) return;
 
@@ -51,18 +63,20 @@ async function saveUserData() {
         score: score
     }
 
-    // 1. dados principais do usuário
     await set(ref(db, `usuarios/${uid}`), data);
-
-    // 2. ranking separado (evita bagunça no users)
     await set(ref(db, `ranking/${uid}`), data);
-
-    // 3. histórico (sempre append)
     await push(ref(db, `historico/${uid}`), {
         ...data,
         data: new Date().toISOString()
     });
 }
+
+/**
+ * Carrega dados do usuário do Firebase
+ * @async
+ * @param {string} uid - ID do usuário
+ * @returns {Promise<void>}
+ */
 async function carregarDadosUsuario(uid) {
     const snapshot = await get(ref(db, `usuarios/${uid}`));
 
@@ -71,18 +85,19 @@ async function carregarDadosUsuario(uid) {
     const data = snapshot.val();
 
     dadosUsuario = data;
-
     Session.total_score = data.total_score || 0;
     Session.max_score = data.max_score || 0;
     Session.rounds = data.rounds || 0;
 }
 
-// [[ EXPANDER ]]
+/**
+ * Expansor de expressões com suporte a ranges e listas
+ */
 const Expander = {
     /**
-     * Expande uma expressão
-     * @param {string} input
-     * @returns {string[]}
+     * Expande uma expressão com ranges [a,b,c] ou a..c
+     * @param {string} input - Expressão a expandir
+     * @returns {string[]} Array com valores expandidos
      */
     expand(input) {
         const tokens = this.tokenize(input);
@@ -91,9 +106,9 @@ const Expander = {
     },
 
     /**
-     * Tokeniza respeitando escapes
-     * @param {string} input
-     * @returns {string[]}
+     * Tokeniza input respeitando caracteres escapados
+     * @param {string} input - String a tokenizar
+     * @returns {string[]} Array de tokens
      */
     tokenize(input) {
         /** @type {string[]} */
@@ -141,9 +156,9 @@ const Expander = {
     },
 
     /**
-     * Expande um token
-     * @param {string} token
-     * @returns {string[]}
+     * Expande um token individual
+     * @param {string} token - Token para expandir
+     * @returns {string[]} Token expandido ou original
      */
     expandToken(token) {
         // lista: [a,b,c]
@@ -161,9 +176,9 @@ const Expander = {
     },
 
     /**
-     * Split de lista respeitando escape
-     * @param {string} input
-     * @returns {string[]}
+     * Divide lista respeitando caracteres escapados
+     * @param {string} input - String com itens separados por vírgula
+     * @returns {string[]} Array de itens da lista
      */
     splitList(input) {
         /** @type {string[]} */
@@ -201,9 +216,9 @@ const Expander = {
     },
 
     /**
-     * Expande range (ex: 1..3 ou a..c)
-     * @param {string} token
-     * @returns {string[]}
+     * Expande range numérico ou alfabético
+     * @param {string} token - Token com range (ex: 1..3 ou a..c)
+     * @returns {string[]} Array com valores do range expandido
      */
     expandRange(token) {
         const match = token.match(/^(.*?)(\d+|\w)\.\.(\d+|\w)(.*)$/);
@@ -237,9 +252,9 @@ const Expander = {
     },
 
     /**
-     * Produto cartesiano
-     * @param {string[][]} arrays
-     * @returns {string[]}
+     * Calcula produto cartesiano de múltiplos arrays
+     * @param {string[][]} arrays - Arrays para produto cartesiano
+     * @returns {string[]} Resultado do produto cartesiano
      */
     cartesian(arrays) {
         return arrays.reduce(
@@ -252,19 +267,19 @@ const Expander = {
 // [[ ASSETS ]]
 
 const AudioService = {
-    /** @type {Map<string, any>} */
+    /** @type {Map<string, any>} Configuração de áudios */
     config: new Map(),
 
-    /** @type {Map<string, HTMLAudioElement[]>} */
+    /** @type {Map<string, HTMLAudioElement[]>} Cache de áudios carregados */
     cache: new Map(),
 
-    /** @type {Map<string, Set<HTMLAudioElement>>} */
+    /** @type {Map<string, Set<HTMLAudioElement>>} Áudios ativos por track */
     activeByTrack: new Map(),
 
     /**
-     * Pega um canal de áudio
-     * @param {string} name
-     * @returns {HTMLAudioElement|null}
+     * Obtém elemento de áudio por nome
+     * @param {string} name - Nome do áudio
+     * @returns {HTMLAudioElement|null} Elemento de áudio ou null
      */
     getAudioTrack(name) {
         const el = document.querySelector(`audio[track][name="${name}"]`);
@@ -276,8 +291,9 @@ const AudioService = {
     },
 
     /**
-     * Carrega config JSON
-     * @returns {Promise<Record<string, string|string[]>>}
+     * Carrega configuração JSON de áudios
+     * @async
+     * @returns {Promise<Record<string, string|string[]>>} Configuração de áudios
      */
     async getAudioConfig() {
         const res = await fetch("./assets/soundconfig.json");
@@ -286,7 +302,8 @@ const AudioService = {
     },
 
     /**
-     * Inicializa config + preload
+     * Inicializa configuração e carrega todos os áudios
+     * @async
      * @returns {Promise<void>}
      */
     async updateConfig() {
@@ -298,9 +315,9 @@ const AudioService = {
     },
 
     /**
-     * Resolve paths
-     * @param {string} name
-     * @returns {string[]}
+     * Resolve caminhos de áudio baseado na configuração
+     * @param {string} name - Nome do áudio
+     * @returns {string[]} Array de caminhos de áudio
      */
     resolvePaths(name) {
         if (!this.config.has(name)) return [];
@@ -322,7 +339,8 @@ const AudioService = {
     },
 
     /**
-     * Preload geral
+     * Carrega todos os áudios configurados
+     * @async
      * @returns {Promise<void>}
      */
     async preloadAll() {
@@ -336,8 +354,9 @@ const AudioService = {
     },
 
     /**
-     * Preload por nome
-     * @param {string} name
+     * Carrega áudios específicos por nome
+     * @async
+     * @param {string} name - Nome do áudio
      * @returns {Promise<void>}
      */
     async preload(name) {
@@ -366,9 +385,9 @@ const AudioService = {
     },
 
     /**
-     * Registra áudio ativo
-     * @param {string} trackName
-     * @param {HTMLAudioElement} audio
+     * Registra áudio ativo para rastreamento
+     * @param {string} trackName - Nome da track
+     * @param {HTMLAudioElement} audio - Elemento de áudio
      */
     _register(trackName, audio) {
         if (!this.activeByTrack.has(trackName)) {
@@ -384,9 +403,9 @@ const AudioService = {
     },
 
     /**
-     * Toca áudio
-     * @param {string} name
-     * @param {string|HTMLAudioElement} track
+     * Toca um áudio aleatório do pool
+     * @param {string} name - Nome do áudio
+     * @param {string|HTMLAudioElement} track - Track ou nome da track
      */
     playAudio(name, track) {
         const pool = this.cache.get(name);
@@ -418,9 +437,9 @@ const AudioService = {
     },
 
     /**
-     * Define volume de uma track (inclusive ativos)
-     * @param {string} trackName
-     * @param {number} volume
+     * Define volume de uma track incluindo áudios ativos
+     * @param {string} trackName - Nome da track
+     * @param {number} volume - Volume (0-1)
      */
     setTrackVolume(trackName, volume) {
         volume = Math.max(0, Math.min(1, volume));
@@ -437,15 +456,19 @@ const AudioService = {
     }
 };
 
+/**
+ * Serviço de playlists para gerenciar sequências de áudio
+ */
 const PlaylistService = {
-    /** @type {Map<string, Playlist>} */
+    /** @type {Map<string, Playlist>} Playlists ativas */
     playlists: new Map(),
 
     /**
-     * Cria playlist
-     * @param {string} name
-     * @param {string[]} audios
-     * @param {PlaylistOptions} [options]
+     * Cria uma nova playlist
+     * @param {string} name - Nome da playlist
+     * @param {string[]} audios - Array de nomes de áudios
+     * @param {PlaylistOptions} [options] - Opções da playlist
+     * @returns {string} Nome da playlist criada
      */
     create(name, audios, options = {}) {
         this.playlists.set(name, {
@@ -462,8 +485,8 @@ const PlaylistService = {
     },
 
     /**
-     * Toca playlist
-     * @param {string} name
+     * Inicia reprodução de uma playlist
+     * @param {string} name - Nome da playlist
      */
     play(name) {
         const pl = this.playlists.get(name);
@@ -480,8 +503,8 @@ const PlaylistService = {
     },
 
     /**
-     * Para playlist
-     * @param {string} name
+     * Para a reprodução de uma playlist
+     * @param {string} name - Nome da playlist
      */
     stop(name) {
         const pl = this.playlists.get(name);
@@ -496,8 +519,8 @@ const PlaylistService = {
     },
 
     /**
-     * Próxima música
-     * @param {string} name
+     * Reproduz próxima musik da playlist
+     * @param {string} name - Nome da playlist
      */
     next(name) {
         const pl = this.playlists.get(name);
@@ -508,8 +531,9 @@ const PlaylistService = {
     },
 
     /**
-     * Avança índice
-     * @param {Playlist} pl
+     * Avança para próximo índice da playlist
+     * @param {Playlist} pl - Playlist
+     * @private
      */
     _advance(pl) {
         if (pl.shuffle) {
@@ -529,8 +553,9 @@ const PlaylistService = {
     },
 
     /**
-     * Toca atual
-     * @param {Playlist} pl
+     * Reproduz áudio atual da playlist
+     * @param {Playlist} pl - Playlist
+     * @private
      */
     _playCurrent(pl) {
         if (!pl.playing) return;
@@ -581,12 +606,24 @@ const PlaylistService = {
  * @property {HTMLAudioElement|string} [track]
  */
 AudioService.updateConfig();
-// [[ STORAGE ]]
+
+/**
+ * Gerenciador de configurações persistentes em localStorage
+ */
 const Config = {
+    /** @type {string} Chave de armazenamento */
     key: "config",
+    
+    /** @type {boolean} Config foi carregado */
     loaded: false,
+    
+    /** @type {Object} Dados da configuração */
     data: {},
 
+    /**
+     * Carrega configurações do localStorage
+     * @returns {Object} Dados carregados
+     */
     load() {
         if (this.loaded) return this.data;
         this.loaded = true;
@@ -611,21 +648,40 @@ const Config = {
         return this.data;
     },
 
+    /**
+     * Salva configurações no localStorage
+     */
     save() {
         localStorage.setItem(this.key, JSON.stringify(this.data));
     },
 
+    /**
+     * Obtém valor da configuração
+     * @param {string} name - Nome da configuração
+     * @param {*} fallback - Valor padrão
+     * @returns {*} Valor da configuração ou fallback
+     */
     get(name, fallback = null) {
         return Object.hasOwn(this.data, name)
             ? this.data[name]
             : fallback;
     },
 
+    /**
+     * Define valor da configuração
+     * @param {string} name - Nome da configuração
+     * @param {*} value - Valor a armazenar
+     */
     set(name, value) {
         this.data[name] = value;
         this.save();
     },
 
+    /**
+     * Define valor padrão se não existir
+     * @param {string} name - Nome da configuração
+     * @param {*} value - Valor padrão
+     */
     setDefault(name, value) {
         if (!Object.hasOwn(this.data, name)) {
             this.data[name] = value;
@@ -640,19 +696,40 @@ Config.setDefault("bgmActivated", true);
 Config.setDefault("sfxActivated", true);
 Config.setDefault("scoreSounds", true);
 
+/**
+ * Gerenciador de dados da sessão de jogo
+ */
 const Session = {
+    /** @type {string[]} Campos temporários */
     temporary: ["temporary", "score", "auto_saving", "loaded"],
     
+    /** @type {number} Pontuação da partida atual */
     score: 0,
+    
+    /** @type {number} Pontuação total acumulada */
     total_score: 0,
+    
+    /** @type {number} Pontuação máxima atingida */
     max_score: 0,
+    
+    /** @type {number} Quantidade de rodadas jogadas */
     rounds: 0,
 
+    /** @type {boolean} Auto-save ativado */
     auto_save: false,
+    
+    /** @type {boolean} Salvando dados */
     auto_saving: false,
+    
+    /** @type {boolean} Session foi carregada */
     loaded: false,
 
+    /** @type {Function} Função de salvamento assíncrono */
     aSave: saveUserData,
+    
+    /**
+     * Salva dados da sessão
+     */
     save() {
         localStorage.setItem(
             "session", JSON.stringify(this)
@@ -660,16 +737,19 @@ const Session = {
         console.log(JSON.stringify(this));
         this.aSave();
     },
+    
+    /**
+     * Carrega dados da sessão
+     */
     load() {
         if (this.loaded) return;
         this.loaded = true;
-        // const data = localStorage.getItem(
-        //     "session"
-        // ) ?? "{}";
-        // const obj = JSON.parse(data);
-        // console.log(obj)
-        // Object.assign(this, obj);
     },
+    
+    /**
+     * Inicia salvamento automático
+     * @private
+     */
     _startAutoSave() {
         if (this.auto_saving) return;
         this.auto_saving = true;
@@ -677,13 +757,20 @@ const Session = {
             this._autoSaveHandler();
         }, 1000)
     },
+    
+    /**
+     * Handler de salvamento automático
+     * @private
+     */
     _autoSaveHandler() {
         if (!this.auto_save) return;
         this.save();
     }
 }
 
-// [[ ELEMENTOS ]]
+/**
+ * Referências de elementos do DOM
+ */
 const dino = document.querySelector('.dino');
 const nuvem = document.querySelector(".nuvem");
 const board = document.getElementById('game-board');
@@ -694,36 +781,49 @@ const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 const configElements = document.querySelectorAll("[data-config]");
 
+/** @type {HTMLElement|null} Elemento do sol/lua */
 let solElement = null;
 
-/** 
- * @param   { string } name
- * @param   { any } value
- * @returns { void }
- * */
+/**
+ * Altera uma variável CSS
+ * @param {string} name - Nome da variável
+ * @param {any} value - Novo valor
+ */
 function changeCSSVariable(name, value) {
     document.documentElement.style.setProperty(`--${name}`, value.toString());
 }
+
 /**
  * Obtém o valor de uma variável CSS
- * @param   {string} name
- * @param   {HTMLElement} [el]
- * @returns {string}
+ * @param {string} name - Nome da variável
+ * @param {HTMLElement} [el] - Elemento a consultar
+ * @returns {string} Valor da variável CSS
  */
 function getCSSVariable(name, el = document.documentElement) {
     return getComputedStyle(el)
         .getPropertyValue(`--${name}`)
         .trim();
 }
+
+/** @type {HTMLAudioElement|null} Track de efeitos sonoros */
 const sfxTrack = AudioService.getAudioTrack("sfx");
+
+/** @type {HTMLAudioElement|null} Track de música de fundo */
 const bgmTrack = AudioService.getAudioTrack("bgm");
+
+/** @type {HTMLAudioElement|null} Track de sound efeitos de pontuação */
 const scoTrack = AudioService.getAudioTrack("sco");
+
+/** @type {number} Volume padrão de SFX */
 const defaultSfxVolume = 0.5;
+
+/** @type {number} Volume padrão de BGM */
 const defaultBgmVolume = 0.2;
 
 /**
- * @param {string} key
- * @returns {boolean}
+ * Obtém valor booleano da configuração
+ * @param {string} key - Chave da configuração
+ * @returns {boolean} Valor booleano
  */
 function getBooleanConfig(key) {
     const value = Config.get(key, false);
@@ -736,9 +836,9 @@ function getBooleanConfig(key) {
 }
 
 /**
- * @param {HTMLElement} container
- * @param {boolean} isActive
- * @returns {void}
+ * Renderiza elemento de configuração
+ * @param {HTMLElement} container - Container do elemento
+ * @param {boolean} isActive - Se está ativo
  */
 function renderConfigElement(container, isActive) {
     const activatedEl = container.querySelector(".activated");
@@ -751,9 +851,9 @@ function renderConfigElement(container, isActive) {
 }
 
 /**
- * @param {string} key
- * @param {boolean} value
- * @returns {void}
+ * Aplica efeito de configuração
+ * @param {string} key - Chave da configuração
+ * @param {boolean} value - Novo valor
  */
 function applyConfigEffect(key, value) {
     if (key === "bgmActivated") {
@@ -772,8 +872,7 @@ function applyConfigEffect(key, value) {
 }
 
 /**
- * Liga a UI com o objeto Config para chaves booleanas em [data-config].
- * @returns {void}
+ * Liga elementos UI com configurações booleanas
  */
 function bindConfigElements() {
     configElements.forEach((el) => {
@@ -807,50 +906,107 @@ function bindConfigElements() {
 
 bindConfigElements();
 
-// [[ VARIÁVEIS ]]
+/**
+ * Variáveis de estado do jogo
+ */
+
+/** @type {boolean} Indica se o jogo terminou */
 let isGameOver = false;
+
+/** @type {number|null} ID do intervalo de pontuação */
 let scoreInterval;
+
+/** @type {number|null} ID do intervalo de colisão */
 let checkCollisionInterval;
+
+/** @type {boolean} Indica se o dinossauro está pulando */
 let jumping = false;
+
+/** @type {boolean} Indica se o jogo foi iniciado */
 let gameStarted = false;
+
+/** @type {boolean} Indica se música está tocando */
 let musicPlaying = false;
 
+/** @type {number|null} ID do timeout dos cactos */
 let cactusTimeout;
+
+/** @type {number} Duração da animação dos cactos */
 let cactusAnimationDuration = 3;
+
+/** @type {number} Aleatoriedade na duração dos cactos */
 let cactusAnimationDurationRandomness = 0;
+
+/** @type {number} Intervalo entre aparições de cactos (ms) */
 let cactusIntervalDuration = 2000;
+
+/** @type {number} Aleatoriedade do intervalo de cactos (ms) */
 let cactusIntervalDurationRandomness = 500;
 
+/** @type {number|null} ID do timeout das nuvens */
 let cloudTimeout;
+
+/** @type {number} Duração da animação das nuvens */
 let cloudAnimationDuration = 10;
+
+/** @type {number} Aleatoriedade da duração das nuvens */
 let cloudAnimationDurationRandomness = 10;
+
+/** @type {number} Intervalo entre aparições de nuvens (ms) */
 let cloudIntervalDuration = 1500;
+
+/** @type {number} Aleatoriedade do intervalo de nuvens (ms) */
 let cloudIntervalDurationRandomness = 500;
+
+/** @type {number} Escala das nuvens */
 let cloudScale = 1;
+
+/** @type {number} Aleatoriedade da escala das nuvens */
 let cloudScaleRandomness = 1;
+
+/** @type {number} Rotação do dinossauro em graus */
 let dinoRotation = 0;
+
+/** @type {number} Duração do ciclo dia/noite em segundos */
 const daynightCycleDuration = 30;
+
+/** @type {number} Intervalo de pontuação em segundos */
 const scoreIntervalDuration = 0.10;
 
+/** @type {string} Textura do cacto */
 let cactusTexture = "🌵";
+
+/** @type {string} Textura do dinossauro */
 let dinoTexture = "🦖";
+
+/** @type {string} Textura da nuvem */
 let cloudTexture = "☁️";
 
+/** @type {string} Cor padrão de fundo 1 */
 const defaultBackgroundColor1 = getCSSVariable("background-color1");
+
+/** @type {string} Cor padrão de fundo 2 */
 const defaultBackgroundColor2 = getCSSVariable("background-color2");
 
+/** @type {string} Cor padrão do chão 1 */
 const defaultGroundColor1 = getCSSVariable("ground-color1");
+
+/** @type {string} Cor padrão do chão 2 */
 const defaultGroundColor2 = getCSSVariable("ground-color2");
+
+/** @type {string} Cor padrão do chão 3 */
 const defaultGroundColor3 = getCSSVariable("ground-color3");
 
+/**
+ * Aplica duração do ciclo dia/noite
+ */
 function applyDayNightCycleDuration() {
     changeCSSVariable("daynight-cycle-duration", `${daynightCycleDuration}s`);
 }
 
 /**
- * Quantidade de pontos para trocar de turno (day -> sunset -> night)
- * baseada em: pontos por segundo * segundos por turno.
- * @returns {number}
+ * Calcula pontos necessários para trocar de turno (day -> sunset -> night)
+ * @returns {number} Pontos por turno
  */
 function getPointsPerTurn() {
     if (scoreIntervalDuration <= 0) return 1;
@@ -859,16 +1015,18 @@ function getPointsPerTurn() {
 
 applyDayNightCycleDuration();
 
-console.log(dadosUsuario)
-
-// [[ CACTO INICIAL ]]
+/**
+ * Inicialização de spawners de cactos e nuvens
+ */
 const randomTime = Math.random() * cactusIntervalDurationRandomness + cactusIntervalDuration;
 cactusTimeout = setTimeout(spawnCactus, randomTime);
 
 const randomCloudTime = Math.random() * cloudIntervalDurationRandomness + cloudIntervalDuration;
 cloudTimeout = setTimeout(spawnCloud, randomCloudTime);
 
-// [[ EVENTOS ]]
+/**
+ * Event listeners de entrada
+ */
 document.addEventListener("keydown", (event) => {
     if (
         event.code === 'Space' ||
@@ -883,7 +1041,9 @@ board.addEventListener('click', () => {
     handleAction(false);
 });
 
-
+/**
+ * Inicia música de fundo
+ */
 function startBackgroundMusic() {
     if (musicPlaying) return;
     musicPlaying = true;
@@ -909,23 +1069,31 @@ function startBackgroundMusic() {
 
 document.addEventListener("load", () => {
     Session.load();
-    console.log("Carregando dados");
 });
+
 document.addEventListener("beforeunload", () => {
-    console.log("Guardando Dados")
     Session.save();
 });
 
+/**
+ * Executa música uma única vez
+ */
 function once() {
     if (musicPlaying) return;
     startBackgroundMusic();
 }
 
-// [[ THEME SYSTEM ]]
+/**
+ * Sistema de temas com variantes dia/noite/entardecer
+ */
 const ThemeSystem = {
+    /** @type {number} Índice do tema atual */
     currentThemeIndex: -1,
-    currentVariant: "day", // "day", "sunset", "night"
+    
+    /** @type {string} Variante atual (day, sunset, night) */
+    currentVariant: "day",
 
+    /** @type {Array} Lista de temas disponíveis */
     themes: [
         {
             name: "sky",
@@ -980,8 +1148,8 @@ const ThemeSystem = {
     ],
 
     /**
-     * Seleciona um tema e armazena o índice
-     * @param {number} themeIndex
+     * Seleciona um tema por índice
+     * @param {number} themeIndex - Índice do tema
      */
     selectTheme(themeIndex) {
         this.currentThemeIndex = themeIndex;
@@ -989,8 +1157,8 @@ const ThemeSystem = {
     },
 
     /**
-     * Aplica uma variante do tema atual
-     * @param {string} variant
+     * Aplica variante do tema atual
+     * @param {string} variant - Variante (day, sunset, night)
      */
     applyVariant(variant) {
         if (this.currentThemeIndex < 0 || !this.themes[this.currentThemeIndex]) return;
@@ -1010,9 +1178,9 @@ const ThemeSystem = {
     },
 
     /**
-     * Determina a variante baseada no score
-     * @param {number} score
-     * @returns {string}
+     * Obtém variante apropriada para a pontuação
+     * @param {number} score - Pontuação atual
+     * @returns {string} Variante (day, sunset, night)
      */
     getVariantForScore(score) {
         const pointsPerTurn = getPointsPerTurn();
@@ -1025,8 +1193,8 @@ const ThemeSystem = {
     },
 
     /**
-     * Obtém os textures do tema atual
-     * @returns {Object}
+     * Obtém texturas do tema atual
+     * @returns {Object} Texturas (cacto, dino, nuvem)
      */
     getCurrentTextures() {
         if (this.currentThemeIndex < 0) return null;
@@ -1034,8 +1202,8 @@ const ThemeSystem = {
     },
 
     /**
-     * Obtém o emoji do sol/lua para a variante atual
-     * @returns {string}
+     * Obtém emoji do sol/lua para variante atual
+     * @returns {string} Emoji do sol ou lua
      */
     getCurrentSun() {
         if (this.currentThemeIndex < 0) return "☀️";
@@ -1046,8 +1214,8 @@ const ThemeSystem = {
 };
 
 /**
- * Atualiza a variante do tema baseada no score
- * @param {number} score
+ * Atualiza variante do tema baseada na pontuação
+ * @param {number} score - Pontuação atual
  */
 function updateThemeVariant(score) {
     const targetVariant = ThemeSystem.getVariantForScore(score);
@@ -1058,14 +1226,16 @@ function updateThemeVariant(score) {
 }
 
 /**
- * Atualiza o emoji do sol/lua baseado na variante atual
- * @returns {void}
+ * Atualiza emoji do sol/lua baseado na variante atual
  */
 function updateThemeSun() {
     if (!solElement) return;
     solElement.innerText = ThemeSystem.getCurrentSun();
 }
 
+/**
+ * Processa e aplica texturas aleatórias do tema
+ */
 function processTextures() {
     const c = Math.random() * 100;
     
@@ -1100,7 +1270,11 @@ function processTextures() {
 
     dino.innerText = dinoTexture;
     nuvem.innerText = cloudTexture;
-}   
+}
+
+/**
+ * Inicia uma nova partida
+ */
 function startGame() {
     once();
     processTextures();
@@ -1141,11 +1315,14 @@ function restartGame() {
     gameOverMsg.classList.add("hidden");
 }
 
-// [[ HANDLERS ]]
 /**
- * @param {boolean} spacePressed
- * @returns {void}
- * */
+ * Handlers de eventos do jogo
+ */
+
+/**
+ * Handler de ação do jogador (pular ou iniciar jogo)
+ * @param {boolean} spacePressed - Se foi acionado por teclado
+ */
 function handleAction(spacePressed) {
     if (gameStarted) {
         jump();
@@ -1161,6 +1338,10 @@ function handleAction(spacePressed) {
         }
     }
 }
+
+/**
+ * Handler de fim de jogo
+ */
 function handleGameOver() {
     isGameOver = true;
     gameStarted = false;
@@ -1190,7 +1371,13 @@ function handleGameOver() {
     gameOverMsg.classList.remove('hidden');
 }
 
-// [[ FUNÇÕES ]]
+/**
+ * Funções do jogo
+ */
+
+/**
+ * Faz o dinossauro pular
+ */
 function jump() {
     if (jumping) return;
     jumping = true;
@@ -1214,12 +1401,17 @@ function jump() {
     }, 500);
 }
 
+/**
+ * Loop de verificação de colisões
+ */
 checkCollisionInterval = setInterval(() => {
     if (!gameStarted) return;
     checkCollision();
-}, 10)
+}, 10);
 
-// loop
+/**
+ * Loop principal de pontuação e atualização do jogo
+ */
 scoreInterval = setInterval(() => {
     scoreElement.forEach((el) => {
         el.innerText = Session.score.toString().padStart(5, '0');
@@ -1282,6 +1474,9 @@ scoreInterval = setInterval(() => {
     }
 }, 1000 * scoreIntervalDuration);
 
+/**
+ * Spawnea um novo cacto na tela
+ */
 function spawnCactus() {
     if (gameStarted && !isGameOver) {
         const cactus = document.createElement('div');
@@ -1297,6 +1492,10 @@ function spawnCactus() {
     const randomTime = Math.random() * cactusIntervalDurationRandomness + cactusIntervalDuration;
     cactusTimeout = setTimeout(spawnCactus, randomTime);
 }
+
+/**
+ * Spawnea uma nova nuvem na tela
+ */
 function spawnCloud() {
     if (gameStarted && !isGameOver) {
         const cloud = document.createElement("div");
@@ -1330,6 +1529,10 @@ function spawnCloud() {
     const randomTime = Math.random() * cloudIntervalDurationRandomness + cloudIntervalDuration;
     cloudTimeout = setTimeout(spawnCloud, randomTime);
 }
+
+/**
+ * Verifica colisão entre dinossauro e cactos
+ */
 function checkCollision() {
     if (!gameStarted) return;
     const dinoRect = dino.getBoundingClientRect();
