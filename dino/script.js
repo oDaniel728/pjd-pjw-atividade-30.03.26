@@ -1037,7 +1037,7 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-board.addEventListener('click', () => {
+board.addEventListener('pointerdown', () => {
     handleAction(false);
 });
 
@@ -1092,6 +1092,9 @@ const ThemeSystem = {
     
     /** @type {string} Variante atual (day, sunset, night) */
     currentVariant: "day",
+
+    /** @type {string|null} Variante alvo durante transição */
+    transitionTarget: null,
 
     /** @type {Array} Lista de temas disponíveis */
     themes: [
@@ -1214,14 +1217,87 @@ const ThemeSystem = {
 };
 
 /**
+ * Anima transição suave de cores entre variantes
+ * @param {string} fromVariant - Variante atual
+ * @param {string} toVariant - Variante destino
+ * @param {number} duration - Duração da transição em ms
+ */
+function animateThemeTransition(fromVariant, toVariant, duration = 5000) {
+    if (ThemeSystem.currentThemeIndex < 0) return;
+    if (ThemeSystem.transitionTarget === toVariant) return;
+
+    const theme = ThemeSystem.themes[ThemeSystem.currentThemeIndex];
+    const fromColors = theme.variants[fromVariant];
+    const toColors = theme.variants[toVariant];
+
+    if (!fromColors || !toColors) return;
+
+    ThemeSystem.transitionTarget = toVariant;
+    ThemeSystem.currentVariant = toVariant;
+    updateThemeSun();
+
+    const startTime = Date.now();
+    const startColors = {
+        bg1: fromColors.bg1,
+        bg2: fromColors.bg2,
+        gr1: fromColors.gr1,
+        gr2: fromColors.gr2,
+        gr3: fromColors.gr3
+    };
+
+    const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const interpolateColor = (from, to, t) => {
+            const fromRgb = parseInt(from.slice(1), 16);
+            const toRgb = parseInt(to.slice(1), 16);
+
+            const r1 = (fromRgb >> 16) & 255;
+            const g1 = (fromRgb >> 8) & 255;
+            const b1 = fromRgb & 255;
+
+            const r2 = (toRgb >> 16) & 255;
+            const g2 = (toRgb >> 8) & 255;
+            const b2 = toRgb & 255;
+
+            const r = Math.round(r1 + (r2 - r1) * t);
+            const g = Math.round(g1 + (g2 - g1) * t);
+            const b = Math.round(b1 + (b2 - b1) * t);
+
+            return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+        };
+
+        const currentBg1 = interpolateColor(startColors.bg1, toColors.bg1, progress);
+        const currentBg2 = interpolateColor(startColors.bg2, toColors.bg2, progress);
+        const currentGr1 = interpolateColor(startColors.gr1, toColors.gr1, progress);
+        const currentGr2 = interpolateColor(startColors.gr2, toColors.gr2, progress);
+        const currentGr3 = interpolateColor(startColors.gr3, toColors.gr3, progress);
+
+        changeCSSVariable("background-color1", currentBg1);
+        changeCSSVariable("background-color2", currentBg2);
+        changeCSSVariable("ground-color1", currentGr1);
+        changeCSSVariable("ground-color2", currentGr2);
+        changeCSSVariable("ground-color3", currentGr3);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            ThemeSystem.transitionTarget = null;
+        }
+    };
+
+    animate();
+}
+
+/**
  * Atualiza variante do tema baseada na pontuação
  * @param {number} score - Pontuação atual
  */
 function updateThemeVariant(score) {
     const targetVariant = ThemeSystem.getVariantForScore(score);
     if (targetVariant !== ThemeSystem.currentVariant) {
-        ThemeSystem.applyVariant(targetVariant);
-        updateThemeSun();
+        animateThemeTransition(ThemeSystem.currentVariant, targetVariant, 5000);
     }
 }
 
@@ -1328,13 +1404,9 @@ function handleAction(spacePressed) {
         jump();
     } else {
         if (isGameOver) {
-            if (spacePressed) {
-                restartGame();
-            }
+            restartGame();
         } else {
-            if (spacePressed) {
-                startGame();
-            }
+            startGame();
         }
     }
 }

@@ -55,7 +55,6 @@ body {
     border: 3px solid #555;            /* Borda cinza escura ao redor do palco */
     border-radius: 5px;                  /* Cantos levemente arredondados */
     box-shadow: 0 0 20px rgba(0,0,0,0.5);/* Sombra para dar destaque visual */
-    transition: background 2s ease-in-out; /* Transição suave para mudanças de fundo (ex: dia/noite) */
     
     will-change: background;             /* Otimiza a renderização para mudanças de background */
 }
@@ -74,7 +73,6 @@ body {
     background: linear-gradient(var(--ground-color1), var(--ground-color2)); /* Fundo com gradiente para o chão */
     
     border-top: 4px solid var(--ground-color3);   /* Linha superior para destacar o solo */
-    transition: background 2s ease-in-out, border-top 2s ease-in-out; /* Transição suave para mudanças de cor do chão (ex: dia/noite) */
     
     will-change: background, border-top;         /* Otimiza a renderização */
     z-index: 10;
