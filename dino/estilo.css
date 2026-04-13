@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 :root {
     --background-color1: #87CEEB;
     --background-color2: #1fa4d9;
@@ -6,9 +7,34 @@
     --ground-color3: #8B7355;
     --daynight-cycle-duration: 50s;
 
+    --game-over-msg-color1: #370000c1;
+    --game-over-msg-color2: #d90000;
+
+    --possible-phrases: "Game Over"
+                      | "Fim de Jogo"
+                      | "Você Perdeu"
+                      | "Tente Novamente"
+                      | "Ops, deu ruim!"
+                      | "Não foi dessa vez!"
+                      | "Quase lá!"
+                      | "Continue tentando!"
+                      | "Não desista!"
+                      | "A próxima é sua!"
+                      | "Vai que é tua!"
+                      | "Não se abale!" 
+                      | "Errou feio, errou rude!"
+                      | "Paciência é uma virtude!"
+                      | "O importante é participar!"
+                      | "Nem tudo são flores!"
+                      | "O fracasso é o caminho para o sucesso!"
+                      | "Cada erro é um passo para a vitória!";
+
     --exponential-out: cubic-bezier(.17,.67,.54,1);
 
     --exponential-in: cubic-bezier(.14,0,.82,.41);
+
+    --font-press-start: 'Press Start 2P', monospace;
+    --font-monospace: 'Courier New', monospace;
 
 }
 
@@ -36,7 +62,7 @@ body {
     align-items: center;           /* Centraliza horizontalmente */
     justify-content: center;       /* Centraliza verticalmente */
     min-height: 100vh;             /* Altura mínima = 100% da altura da tela */
-    font-family: Arial, sans-serif;/* Fonte padrão da página */
+    font-family: var(--font-press-start);/* Fonte padrão da página */
 }
 
 /* =========================================================
@@ -95,6 +121,7 @@ body {
     --rotation: 0deg;
     scale: var(--flip-x) var(--flip-y);
     transform: rotate(var(--rotation));
+    font-family: var(--font-monospace);
     /* Animação de pulo (desativada por enquanto) */
 }
 .flipX {
@@ -155,6 +182,7 @@ Faz o dinossauro subir e depois voltar ao chão.
     line-height: 1;                            /* Remove espaçamento vertical extra */
     z-index: 5;                                /* Fica atrás do dinossauro */
     animation: mover-cacto linear forwards; /* Movimento contínuo do cacto */
+    font-family: var(--font-monospace);
 }
 
 /* =========================================================
@@ -193,6 +221,7 @@ Faz o dinossauro subir e depois voltar ao chão.
         mover-nuvem-y 4s linear infinite;
     
         ;/* Movimento contínuo e lento */
+    font-family: var(--font-monospace);
 }
 
 /* =========================================================
@@ -237,6 +266,7 @@ Faz o dinossauro subir e depois voltar ao chão.
         orbita-y var(--daynight-cycle-duration) infinite
 
     ;
+    font-family: var(--font-monospace);
 }
 
 @keyframes orbita-x { /* 0% - esquerda -> 100% - direita */
@@ -269,7 +299,7 @@ Faz o dinossauro subir e depois voltar ao chão.
 .placar {
     background: #111;                     /* Fundo escuro */
     color: #999;                          /* Cor padrão do texto */
-    font-family: 'Courier New', monospace;/* Fonte estilo placar digital */
+    font-family: var(--font-press-start);/* Fonte estilo placar digital */
     font-weight: bold;                    /* Texto em negrito */
     padding: 10px 20px;                   /* Espaçamento interno */
     border-radius: 5px;                   /* Cantos arredondados */
@@ -337,26 +367,65 @@ Faz o dinossauro subir e depois voltar ao chão.
 
 .gameOverMsg {
     position: fixed;
-    top: 50%;
+    top: 50.315%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 9999;
 
-    background: rgba(0, 0, 0, .5);
+    width: 800px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--game-over-msg-color1);
     color: white;
     font-family: monospace;
     font-size: 2rem;
     text-align: center;
     padding: 2rem;
-    border-radius: 1rem;
-    border-color: rgba(0, 0, 0, .5);
-    border-width: 5px;
+    border-radius: 5px;
+    border-color: var(--game-over-msg-color2);
+    border-width: 1px;
     border-style: solid;
+}
+.flex-1 {
+    flex: 1;
+}
+.flex-row {
+    flex-direction: row;
+}
+.flox-col {
+    flex-direction: column;
+}
+.justify-center {
+    justify-content: center;
+}
+.align-center {
+    align-items: center;
+}
+.font-small {
+    font-size: 0.8rem;
+}
+p#phrase {
+    margin-top: 1rem;
+}
+
+.gameOverMsg * {
+    font-family: var(--font-press-start);
 }
 
 .hidden {
     display: none;
-} 
+}
+.transparent {
+    opacity: 0;
+}
+.animateTransparency {
+    transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
 
 .paused {
     animation-play-state: paused;

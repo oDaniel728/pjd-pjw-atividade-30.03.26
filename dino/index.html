@@ -43,20 +43,24 @@
         <p><span class="score-show">...</span><p>HI: <span id="max-score">.....</span> </p> 
     </div>
 
-    <div class="gameOverMsg hidden">
-        <h1>Game Over</h1>
-        <p>Pontuação: <span class="score-show-gameover">0</span></p>
-    </div>
-
-
+    
+    
     <div id="game-board">
+        <div class="gameOverMsg transparent animateTransparency">
+            <h1 class="justify-content-center align-bottom">Game Over</h1>
+            <div class="flex-row justify-content-center align-items-center">
+                <p>Pontuação: <span class="score-show-gameover">0</span></p>
+                <p id="phrase" class="font-small mt-5">Na próxima você consegue!</p>
+            </div>
+        </div>
+
         <div class="nuvem">&#9729</div>
         <div class="flipX dino">🦖</div>
         <!-- <div class="cacto">🌵</div> -->
         <div class="chao"></div>
     </div>
     <nav class="menu-jogo">
-        <a href="javascript:history.back()">⬅️ Voltar</a>
+        <a href="javascript:history.back()">Voltar</a>
     </nav>
     <!-- <div> -->
     <!--     <button id="btn-start"></button> -->

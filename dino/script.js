@@ -790,6 +790,7 @@ const maxScoreElement = document.getElementById('max-score');
 const startMsg = document.getElementById('start-msg');
 const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
+const gameOverPhrase = document.querySelector("p#phrase");
 const configElements = document.querySelectorAll("[data-config]");
 
 /** @type {HTMLElement|null} Elemento do sol/lua */
@@ -814,6 +815,33 @@ function getCSSVariable(name, el = document.documentElement) {
     return getComputedStyle(el)
         .getPropertyValue(`--${name}`)
         .trim();
+}
+
+/**
+ * Lê e parseia frases da variável CSS --possible-phrases
+ * @returns {string[]} Frases disponíveis
+ */
+function getPossiblePhrasesFromCSS() {
+    const raw = getCSSVariable("possible-phrases");
+    if (!raw) return [];
+
+    return raw
+        .split("|")
+        .map((part) => part.trim())
+        .map((part) => part.replace(/^"|"$/g, ""))
+        .filter(Boolean);
+}
+
+/**
+ * Sorteia uma frase da lista de frases possíveis
+ * @returns {string} Frase sorteada
+ */
+function getRandomGameOverPhrase() {
+    const phrases = getPossiblePhrasesFromCSS();
+    if (phrases.length === 0) return "Na próxima você consegue!";
+
+    const index = Math.floor(Math.random() * phrases.length);
+    return phrases[index];
 }
 
 /** @type {HTMLAudioElement|null} Track de efeitos sonoros */
@@ -1399,7 +1427,7 @@ function startGame() {
 function restartGame() {
     startGame();
     isGameOver = false;
-    gameOverMsg.classList.add("hidden");
+    gameOverMsg.classList.add("transparent");
 }
 
 /**
@@ -1434,6 +1462,9 @@ function handleGameOver() {
     if (score !== 0) {
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
+    if (gameOverPhrase) {
+        gameOverPhrase.innerText = getRandomGameOverPhrase();
+    }
     // Session.rounds++;
     saveUserData();
     document
@@ -1451,7 +1482,7 @@ function handleGameOver() {
     }
     dino.classList.add("paused");
     AudioService.playAudio("hit", sfxTrack);
-    gameOverMsg.classList.remove('hidden');
+    gameOverMsg.classList.remove('transparent');
 }
 
 /**
