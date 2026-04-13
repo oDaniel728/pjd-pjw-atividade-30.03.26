@@ -31,6 +31,9 @@
         .table-primary {
             --bs-table-bg: rgba(0, 128, 55, 0.1);
         }
+        .table-current-user {
+            --bs-table-bg: rgba(255, 255, 255, 0.12);
+        }
         .rank-badge {
             position: absolute;
             top: -0.45em;
@@ -61,6 +64,73 @@
         }
         #jogo {
             height: 30rem;
+        }
+        .historico-resumo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .historico-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+        @media (max-width: 1400px) {
+            .historico-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 1100px) {
+            .historico-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 900px) {
+            .historico-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 576px) {
+            .historico-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .historico-item {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 0.65rem;
+            padding: 0.9rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .historico-item .data {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.55rem;
+        }
+        .historico-item .valor-principal {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+        }
+        .historico-item .linha-meta {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.86);
+            margin-bottom: 0.2rem;
+        }
+        .historico-paginacao {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .historico-paginacao .pagina-atual {
+            min-width: 6.5rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
         }
     </style>
     <link href="css/style.css" rel="stylesheet">
@@ -309,7 +379,7 @@
                     <div class="row g-3">
                         <div class="col-12 col-xl-6">
                             <div class="card h-100">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-danger text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-bolt me-2"></i>Ranking por Pontuação Máxima
                                     </h5>
@@ -342,7 +412,7 @@
 
                         <div class="col-12 col-xl-6">
                             <div class="card h-100">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-star me-2"></i>Ranking por Pontuação Total
                                     </h5>
@@ -375,7 +445,7 @@
 
                         <div class="col-12 col-xl-6">
                             <div class="card h-100">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-info text-dark">
                                     <h5 class="mb-0">
                                         <i class="fas fa-gamepad me-2"></i>Ranking por Rounds
                                     </h5>
@@ -408,7 +478,7 @@
 
                         <div class="col-12 col-xl-6">
                             <div class="card h-100">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-success text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-level-up-alt me-2"></i>Ranking por Nível
                                     </h5>
@@ -571,7 +641,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, update, get, onValue, push, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, update, get, onValue, push, child, query, orderByKey, limitToLast, endAt } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // ============================================
         // CONFIGURAÇÃO DO FIREBASE - SUBSTITUA OS VALORES
@@ -599,6 +669,11 @@
         let paresEncontrados = 0;
         let cartaSelecionada = null;
         let bloqueado = false;
+        let historicoPaginas = [];
+        let paginaHistoricoAtual = 1;
+        let historicoTotalPartidas = 0;
+        let historicoCarregando = false;
+        const ITENS_POR_PAGINA_HISTORICO = 10;
 
         // ============================================
         // VERIFICAÇÃO DE AUTENTICAÇÃO
@@ -781,7 +856,7 @@
                         else if (index === 2) medal = '🥉';
                         else medal = index + 1;
 
-                        const isCurrentUser = item.uid === userUid ? 'table-primary' : '';
+                        const isCurrentUser = item.uid === userUid ? 'table-current-user' : '';
                         const pontuacao = tipo === 'max' ? item.max_score : item.total_score;
                         const rounds = item.rounds ?? 0;
                         const nivel = Number(item.nivel ?? 0);
@@ -974,10 +1049,24 @@
 
         async function carregarHistoricoCompleto(uid) {
             try {
-                const snapshot = await get(ref(db, 'historico/' + uid));
                 const container = document.getElementById('historicoCompleto');
+                if (!container) return;
 
-                if (!snapshot.exists()) {
+                historicoCarregando = true;
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>`;
+
+                historicoTotalPartidas = Number(dadosUsuario?.rounds ?? 0);
+                historicoPaginas = [];
+                paginaHistoricoAtual = 1;
+
+                const primeiraPagina = await buscarPaginaHistorico(uid, null);
+                if (!primeiraPagina.itens.length) {
+                    historicoCarregando = false;
                     container.innerHTML = `
                         <p class="text-muted text-center">
                             Nenhuma partida registrada.
@@ -985,47 +1074,161 @@
                     return;
                 }
 
-                const dados = Object.values(snapshot.val()).reverse();
-
-                let html = `
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Pontuação</th>
-                        <th>Total</th>
-                        <th>Máxima</th>
-                        <th>Nível</th>
-                        <th>Rounds</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-                dados.forEach(partida => {
-                    const data = new Date(partida.data).toLocaleString('pt-BR');
-                    const score = partida.score ?? partida.max_score ?? 0;
-
-                    html += `
-                    <tr>
-                        <td>${data}</td>
-                        <td><strong>${score}</strong></td>
-                        <td>${partida.total_score}</td>
-                        <td>${partida.max_score}</td>
-                        <td>${partida.nivel}</td>
-                        <td>${partida.rounds}</td>
-                    </tr>`;
-                });
-
-                html += `
-                </tbody>
-            </table>
-        </div>`;
-
-                container.innerHTML = html;
+                historicoPaginas.push(primeiraPagina);
+                historicoCarregando = false;
+                renderHistoricoCatalogo();
 
             } catch (error) {
+                historicoCarregando = false;
                 console.error(error);
+            }
+        }
+
+        async function buscarPaginaHistorico(uid, chaveAncora) {
+            const historicoRef = ref(db, 'historico/' + uid);
+            const limiteConsulta = chaveAncora
+                ? ITENS_POR_PAGINA_HISTORICO + 2
+                : ITENS_POR_PAGINA_HISTORICO + 1;
+
+            const consulta = chaveAncora
+                ? query(historicoRef, orderByKey(), endAt(chaveAncora), limitToLast(limiteConsulta))
+                : query(historicoRef, orderByKey(), limitToLast(limiteConsulta));
+
+            const snapshot = await get(consulta);
+            if (!snapshot.exists()) {
+                return {
+                    itens: [],
+                    oldestKey: null,
+                    hasMoreOlder: false
+                };
+            }
+
+            let entradas = Object.entries(snapshot.val())
+                .sort((a, b) => {
+                    if (a[0] < b[0]) return -1;
+                    if (a[0] > b[0]) return 1;
+                    return 0;
+                });
+
+            if (chaveAncora) {
+                entradas = entradas.filter(([key]) => key !== chaveAncora);
+            }
+
+            const hasMoreOlder = entradas.length > ITENS_POR_PAGINA_HISTORICO;
+            if (hasMoreOlder) {
+                entradas = entradas.slice(entradas.length - ITENS_POR_PAGINA_HISTORICO);
+            }
+
+            const itens = entradas
+                .map(([key, partida]) => ({ key, partida }))
+                .reverse();
+
+            return {
+                itens,
+                oldestKey: entradas[0]?.[0] || null,
+                hasMoreOlder
+            };
+        }
+
+        function renderHistoricoCatalogo() {
+            const container = document.getElementById('historicoCompleto');
+            if (!container) return;
+
+            const paginaAtual = historicoPaginas[paginaHistoricoAtual - 1];
+            if (!paginaAtual || !paginaAtual.itens.length) {
+                container.innerHTML = `
+                    <p class="text-muted text-center mb-0">
+                        Nenhuma partida registrada.
+                    </p>`;
+                return;
+            }
+
+            const totalPaginasEstimadas = historicoTotalPartidas > 0
+                ? Math.ceil(historicoTotalPartidas / ITENS_POR_PAGINA_HISTORICO)
+                : historicoPaginas.length;
+
+            const textoPagina = totalPaginasEstimadas > 0
+                ? `Página ${paginaHistoricoAtual} de ${totalPaginasEstimadas}`
+                : `Página ${paginaHistoricoAtual}`;
+
+            let html = `
+                <div class="historico-resumo">
+                    <h5 class="mb-0">Catálogo de Partidas</h5>
+                    <span class="badge bg-primary">Total: ${historicoTotalPartidas} partidas</span>
+                </div>
+                <div class="historico-grid">`;
+
+            paginaAtual.itens.forEach(({ partida }) => {
+                const data = new Date(partida.data).toLocaleString('pt-BR');
+                const score = Number(partida.score ?? partida.max_score ?? 0);
+                const total = Number(partida.total_score ?? 0);
+                const max = Number(partida.max_score ?? 0);
+                const nivel = Number(partida.nivel ?? 1);
+                const rounds = Number(partida.rounds ?? 0);
+
+                html += `
+                    <article class="historico-item">
+                        <div class="data">${data}</div>
+                        <div class="valor-principal text-primary">Pontuação: ${score}</div>
+                        <div class="linha-meta">Total acumulado: <strong>${total}</strong></div>
+                        <div class="linha-meta">Máxima: <strong>${max}</strong></div>
+                        <div class="linha-meta">Nível: <strong>${nivel}</strong></div>
+                        <div class="linha-meta">Rounds: <strong>${rounds}</strong></div>
+                    </article>`;
+            });
+
+            html += `
+                </div>
+                <div class="historico-paginacao">
+                    <button class="btn btn-outline-light btn-sm" id="btnHistoricoPrev" ${(paginaHistoricoAtual === 1 || historicoCarregando) ? 'disabled' : ''}>
+                        Anterior
+                    </button>
+                    <span class="pagina-atual">${historicoCarregando ? 'Carregando...' : textoPagina}</span>
+                    <button class="btn btn-outline-light btn-sm" id="btnHistoricoNext" ${((!paginaAtual.hasMoreOlder && !historicoPaginas[paginaHistoricoAtual]) || historicoCarregando) ? 'disabled' : ''}>
+                        Próxima
+                    </button>
+                </div>`;
+
+            container.innerHTML = html;
+
+            const btnPrev = document.getElementById('btnHistoricoPrev');
+            const btnNext = document.getElementById('btnHistoricoNext');
+
+            if (btnPrev) {
+                btnPrev.addEventListener('click', () => {
+                    if (paginaHistoricoAtual <= 1) return;
+                    paginaHistoricoAtual -= 1;
+                    renderHistoricoCatalogo();
+                });
+            }
+
+            if (btnNext) {
+                btnNext.addEventListener('click', async () => {
+                    if (historicoCarregando) return;
+                    const paginaEmCache = historicoPaginas[paginaHistoricoAtual];
+                    if (paginaEmCache) {
+                        paginaHistoricoAtual += 1;
+                        renderHistoricoCatalogo();
+                        return;
+                    }
+
+                    const paginaCorrente = historicoPaginas[paginaHistoricoAtual - 1];
+                    if (!paginaCorrente?.hasMoreOlder || !paginaCorrente.oldestKey || !usuarioAtual) return;
+
+                    historicoCarregando = true;
+                    renderHistoricoCatalogo();
+
+                    const proximaPagina = await buscarPaginaHistorico(usuarioAtual.uid, paginaCorrente.oldestKey);
+                    historicoCarregando = false;
+                    if (!proximaPagina.itens.length) {
+                        renderHistoricoCatalogo();
+                        return;
+                    }
+
+                    historicoPaginas.push(proximaPagina);
+                    paginaHistoricoAtual += 1;
+                    renderHistoricoCatalogo();
+                });
             }
         }
 
