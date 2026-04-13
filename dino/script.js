@@ -4,7 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, update, get, onValue, push, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, update, get, onValue, push, child, remove, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 /** @type {Object} Configuração do Firebase */
 const firebaseConfig = {
@@ -48,6 +48,7 @@ async function saveUserData() {
     if (!usuarioAtual) return;
 
     const uid = usuarioAtual.uid;
+    const maxHistorico = 50;
 
     const total = Session.total_score;
     const max = Session.max_score;
@@ -65,10 +66,20 @@ async function saveUserData() {
 
     await set(ref(db, `usuarios/${uid}`), data);
     await set(ref(db, `ranking/${uid}`), data);
-    await push(ref(db, `historico/${uid}`), {
+    const historicoRef = ref(db, `historico/${uid}`);
+    await push(historicoRef, {
         ...data,
         data: new Date().toISOString()
     });
+
+    const snapshotHistorico = await get(query(historicoRef, orderByKey(), limitToLast(maxHistorico + 1)));
+    if (!snapshotHistorico.exists()) return;
+
+    const entradas = Object.entries(snapshotHistorico.val());
+    if (entradas.length <= maxHistorico) return;
+
+    const itensExcedentes = entradas.slice(0, entradas.length - maxHistorico);
+    await Promise.all(itensExcedentes.map(([chave]) => remove(ref(db, `historico/${uid}/${chave}`))));
 }
 
 /**
