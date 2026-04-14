@@ -4,5 +4,10 @@
     "death": "death.mp3",
     "hit": "hit.mp3",
     "bg-song": [ "bg-songs/song1..4.mp3" ],
-    "score": "score.mp3"
+    "score": "score.mp3",
+    "cactus": [ "cactus/sound1..4.mp3" ],
+    "fire": [ "fire/fire1..3.mp3" ],
+    "wood": [ "wood/sound1..4.mp3" ],
+    "grass": [ "grass/sound1..4.mp3" ],
+    "fire_ext": "fire_ext.mp3"
 }
