@@ -1,0 +1,8 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": ["changelog.json"],
+            "url": "/schemas/changelog.schema.json"
+        }
+    ]
+}

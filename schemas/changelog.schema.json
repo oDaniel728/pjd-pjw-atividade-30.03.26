@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/changelog.schema.json",
+    "title": "Changelog",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": ["name", "description", "version"],
+        "additionalProperties": false,
+        "properties": {
+            "name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "description": {
+                "type": "string",
+                "minLength": 1
+            },
+            "version": {
+                "type": "string",
+                "pattern": "^v\\d+\\.\\d+\\.\\d+(?:-[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})?$"
+            },
+            "additions": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/changeItem" },
+                "default": []
+            },
+            "changes": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/changeItem" },
+                "default": []
+            },
+            "removals": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/changeItem" },
+                "default": []
+            }
+        }
+    },
+    "$defs": {
+        "changeItem": {
+            "type": "object",
+            "required": ["name", "description"],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "description": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}
