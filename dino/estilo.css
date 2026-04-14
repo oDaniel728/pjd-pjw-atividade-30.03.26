@@ -86,6 +86,7 @@ body {
     height: 300px;                       /* Altura fixa da área do jogo */
     background: linear-gradient(var(--background-color1), var(--background-color2)); /* Fundo com gradiente */
     
+    contain: paint;
     position: relative;                  /* Referência para elementos posicionados com absolute */
     overflow: hidden;                    /* Esconde o que sair fora da área do jogo */
     margin: 20px auto;                   /* Espaço externo em cima/baixo e centralização horizontal */
@@ -507,24 +508,24 @@ Faz o dinossauro subir e depois voltar ao chão.
     position: fixed;
     top: 25%;
 }
-.spinner {
-    animation: rotate-inf 1s linear infinite;
+.parent {
+    position: relative;
 }
-.force-center {
-    position: fixed;
+
+.spinner {
+    position: absolute;
     top: 50%;
     left: 50%;
-    /* transform: translate(-50%, -50%); */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transform: translate(-50%, -50%);
+    animation: rotate-inf 1s linear infinite;
 }
+
 @keyframes rotate-inf {
     0% {
-        rotate: 0deg;
+        transform: translate(-50%, -50%) rotate(0deg);
     }
     100% {
-        rotate: 360deg;
+        transform: translate(-50%, -50%) rotate(360deg);
     }
 }
 .flex-1 {
