@@ -10,6 +10,9 @@
     --game-over-msg-color1: #370000c1;
     --game-over-msg-color2: #d90000;
 
+    --loading-screen-color1: #014500c1;
+    --loading-screen-color2: #00ff22;
+
     --cactus-fade-in-duration: 0.5s;
     --cactus-move-duration: 4s;
     --cactus-grow-duration: 0.2s;
@@ -494,6 +497,36 @@ Faz o dinossauro subir e depois voltar ao chão.
     border-width: 1px;
     border-style: solid;
 }
+.gameOverMsg#loadingScreen {
+    background: var(--loading-screen-color1);
+    border-color: var(--loading-screen-color2);
+    pointer-events: none;
+}
+.gameOverMsg#loadingScreen p {
+    font-size: 1.5rem;
+    position: fixed;
+    top: 25%;
+}
+.spinner {
+    animation: rotate-inf 1s linear infinite;
+}
+.force-center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* transform: translate(-50%, -50%); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@keyframes rotate-inf {
+    0% {
+        rotate: 0deg;
+    }
+    100% {
+        rotate: 360deg;
+    }
+}
 .flex-1 {
     flex: 1;
 }
@@ -528,6 +561,7 @@ p#phrase {
 }
 .transparent {
     opacity: 0;
+    pointer-events: none;
 }
 .animateTransparency {
     transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);

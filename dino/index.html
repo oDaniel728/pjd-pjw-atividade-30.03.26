@@ -46,7 +46,7 @@
     
     
     <div id="game-board">
-        <div class="gameOverMsg transparent animateTransparency">
+        <div class="gameOverMsg transparent animateTransparency" id="game-over-msg">
             <p id="record" class="anim anim-pulse anim-rotate gold">Novo Recorde!</p>
             <h1 class="justify-content-center align-bottom">Game Over</h1>
             <div class="flex-row justify-content-center align-items-center">
@@ -54,6 +54,11 @@
                 <p id="phrase" class="font-small mt-5">Na próxima você consegue!</p>
             </div>
         </div>
+        <div class="gameOverMsg animateTransparency" id="loadingScreen">
+            <p>Carregando</p>
+            <span class="spinner force-center" id="loadingSpinner">🐍</span>
+        </div>
+        
 
         <div class="nuvem">&#9729</div>
         <div class="flipX dino">🦖</div>
@@ -61,7 +66,8 @@
         <div class="chao"></div>
     </div>
     <nav class="menu-jogo">
-        <a href="javascript:history.back()">Voltar</a>
+        <!-- <a href="javascript:history.back()">Voltar</a> -->
+        <a href="/">Voltar</a>
     </nav>
     <!-- <div> -->
     <!--     <button id="btn-start"></button> -->

@@ -5,6 +5,14 @@
         "version": "v1.0.0-26.04.13",
         "additions": [
             {
+                "name": "(DINO): Tela de carregamento",
+                "description": "Adicionada uma tela de carregamento com animação, exibida durante a inicialização do jogo para melhorar a experiência do usuário."
+            },
+            {
+                "name": "(DINO): Sons 👂",
+                "description": "Efeitos sonoros para saltos, colisões e música de fundo para tornar o jogo mais envolvente. Tudo embutido de forma modular e configurável."
+            },
+            {
                 "name": "Seção de changelog",
                 "description": "Nova aba no menu lateral com exibição das atualizações do projeto."
             },
@@ -19,6 +27,14 @@
         ],
         "changes": [
             {
+                "name": "(DINO): Animações",
+                "description": "Foi adicionado um efeito de fade-in para os obstáculos, tornando a transição mais suave e visualmente agradável. Além disso, as nuvens agora se movem de forma mais fluida, melhorando a estética geral do jogo."
+            },
+            {
+                "name": "(DINO): Tela de Game Over Refinada",
+                "description": "A tela de Game Over foi redesenhada para ser mais visualmente atraente, com melhor contraste e uma mensagem de incentivo personalizada para motivar os jogadores a tentarem novamente."
+            },
+            {
                 "name": "Histórico padronizado",
                 "description": "Tabela de histórico alinhada visualmente com as tabelas de ranking."
             },
@@ -31,6 +47,10 @@
             {
                 "name": "Mensagem estática do histórico",
                 "description": "Removida a mensagem fixa sobre 15 registros na aba Histórico."
+            },
+            {
+                "name": "dino herobrine",
+                "description": "Remoção do dino herobrine 🦖"
             }
         ]
     }

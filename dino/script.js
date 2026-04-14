@@ -28,6 +28,41 @@ let usuarioAtual = null;
 /** @type {Object|null} Dados do usuário carregados do Firebase */
 let dadosUsuario = null;
 
+/** @type {boolean} Indica se dados iniciais ainda estão carregando */
+let isDatabaseLoading = true;
+
+/** @type {string[]} Emojis possíveis para o loading spinner */
+const loadingSpinnerEmojis = ["🐍", "🦖", "🦕", "🌵", "☁️", "⚡", "🔥", "✨", "🎮"];
+
+/**
+ * Sorteia um emoji para o spinner da tela de loading
+ * @returns {string} Emoji selecionado
+ */
+function getRandomLoadingSpinnerEmoji() {
+    const index = Math.floor(Math.random() * loadingSpinnerEmojis.length);
+    return loadingSpinnerEmojis[index];
+}
+
+/**
+ * Atualiza visibilidade da tela de loading
+ * @param {boolean} isLoading - Se está carregando
+ */
+function setDatabaseLoadingState(isLoading) {
+    isDatabaseLoading = isLoading;
+
+    const loadingSpinnerEl = document.getElementById("loadingSpinner");
+    const loadingScreenEl = document.getElementById("loadingScreen");
+
+    if (loadingSpinnerEl) {
+        loadingSpinnerEl.innerText = getRandomLoadingSpinnerEmoji();
+    }
+
+    if (!loadingScreenEl) return;
+    loadingScreenEl.classList.toggle("transparent", !isLoading);
+}
+
+setDatabaseLoadingState(true);
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "login.html";
@@ -35,7 +70,12 @@ onAuthStateChanged(auth, async (user) => {
     }
     
     usuarioAtual = user;
-    await carregarDadosUsuario(user.uid);
+
+    try {
+        await carregarDadosUsuario(user.uid);
+    } finally {
+        setDatabaseLoadingState(false);
+    }
 });
 
 /**
@@ -790,7 +830,7 @@ const board = document.getElementById('game-board');
 const scoreElement = document.querySelectorAll('.score-show');
 const maxScoreElement = document.getElementById('max-score');
 const startMsg = document.getElementById('start-msg');
-const gameOverMsg = document.querySelector('.gameOverMsg');
+const gameOverMsg = document.querySelector('#game-over-msg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 const gameOverPhrase = document.querySelector("p#phrase");
 const gameOverRecord = document.querySelector("p#record");
@@ -873,6 +913,7 @@ function setDinoJumpAnimationDuration(duration) {
 const crouchKeys = new Set(["ShiftLeft", "ShiftRight", "KeyS", "ArrowDown"]);
 
 function startCrouch() {
+    if (isDatabaseLoading) return;
     if (!dino || !gameStarted || isGameOver) return;
     if (crouching) return;
 
@@ -977,6 +1018,7 @@ function bindConfigElements() {
         el.setAttribute("tabindex", "0");
 
         const toggle = () => {
+            if (isDatabaseLoading) return;
             const next = !getBooleanConfig(key);
             Config.set(key, next);
             renderConfigElement(el, next);
@@ -1160,6 +1202,15 @@ cloudTimeout = setTimeout(spawnCloud, randomCloudTime);
 //     }
 // });
 document.addEventListener("keydown", (event) => {
+    if (isDatabaseLoading) {
+        const target = event.target;
+        const isMenuLink = target instanceof Element && target.closest(".menu-jogo a");
+        if (isMenuLink) return;
+
+        event.preventDefault();
+        return;
+    }
+
     if (crouchKeys.has(event.code)) {
         event.preventDefault();
         startCrouch();
@@ -1176,11 +1227,13 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("keyup", (event) => {
+    if (isDatabaseLoading) return;
     if (!crouchKeys.has(event.code)) return;
     stopCrouch();
 });
 
 board.addEventListener('pointerdown', () => {
+    if (isDatabaseLoading) return;
     handleAction(false);
 });
 
@@ -1740,6 +1793,8 @@ function restartGame() {
  * @param {boolean} spacePressed - Se foi acionado por teclado
  */
 function handleAction(spacePressed) {
+    if (isDatabaseLoading) return;
+
     if (gameStarted) {
         jump();
     } else {
