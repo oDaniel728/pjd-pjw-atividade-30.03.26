@@ -9,5 +9,7 @@
     "fire": [ "fire/fire1..3.mp3" ],
     "wood": [ "wood/sound1..4.mp3" ],
     "grass": [ "grass/sound1..4.mp3" ],
-    "fire_ext": "fire_ext.mp3"
+    "fire_ext": "fire_ext.mp3",
+    "exp": "exp.mp3",
+    "levelup": "levelup.mp3"
 }
