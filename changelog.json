@@ -1,5 +1,7 @@
 [
     {
+        "name": "Primeiros Passos",
+        "description": "Lançamento inicial do projeto com funcionalidades básicas de jogo, histórico e ranking.",
         "version": "v1.0.0-26.04.13",
         "additions": [
             {

@@ -65,6 +65,12 @@
         #jogo {
             height: 30rem;
         }
+        .changelog-float-card {
+            transition: transform 0.2s ease;
+        }
+        .changelog-float-card:hover {
+            transform: translateY(-5px);
+        }
     </style>
     <link href="css/style.css" rel="stylesheet">
 
@@ -1041,14 +1047,25 @@
                     const updateTitle = update.version || `Atualização ${index + 1}`;
 
                     return `
-                        <div class="card mb-3 ${isCurrent ? 'border-primary' : ''}">
-                            <div class="card-header d-flex justify-content-between align-items-center ${isCurrent ? 'bg-primary text-white' : 'bg-secondary text-white'}">
+                        <div class="card mb-3 ${isCurrent ? 'border-success' : ''}">
+                            <div class="card-header d-flex justify-content-between align-items-center ${isCurrent ? 'bg-success text-white' : 'bg-secondary text-white'}">
                                 <span>${updateTitle}${isCurrent ? ' (Atual)' : ''}</span>
                             </div>
                             <div class="card-body">
-                                <div class="row g-3">
+                                <div class="col-12 col-lg-12">
+                                    <div class="card h-100 border-info changelog-float-card">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">
+                                                <div class="fw-semibold fs-1">${update.name}</div>
+                                                <small class="text-muted">${update.description}</small>
+                                            </li>
+                                            <li class="list-group-item">Versão: ${update.version}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mt-1">
                                     <div class="col-12 col-lg-4">
-                                        <div class="card h-100 border-success">
+                                        <div class="card h-100 border-success changelog-float-card">
                                             <div class="card-header text-bg-success">
                                                 <strong>Adições</strong>
                                             </div>
@@ -1059,7 +1076,7 @@
                                     </div>
 
                                     <div class="col-12 col-lg-4">
-                                        <div class="card h-100 border-warning">
+                                        <div class="card h-100 border-warning changelog-float-card">
                                             <div class="card-header text-bg-warning text-dark">
                                                 <strong>Mudanças</strong>
                                             </div>
@@ -1070,7 +1087,7 @@
                                     </div>
 
                                     <div class="col-12 col-lg-4">
-                                        <div class="card h-100 border-danger">
+                                        <div class="card h-100 border-danger changelog-float-card">
                                             <div class="card-header text-bg-danger">
                                                 <strong>Remoções</strong>
                                             </div>
@@ -1081,8 +1098,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                };
+                        </div>
+                        `;
+                    };
 
                 changelogContent.innerHTML = updates.map((update, index) => renderUpdate(update, index)).join('');
             } catch (error) {
