@@ -1,0 +1,20 @@
+.ci {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+
+    background-color: currentColor;
+
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
+.ci-dino {
+    -webkit-mask-image: url("/assets/icons/dinosaur.svg");
+    mask-image: url("/assets/icons/dinosaur.svg");
+}
