@@ -1,0 +1,35 @@
+[
+    {
+        "version": "v1.0.0-26.04.13",
+        "additions": [
+            {
+                "name": "Seção de changelog",
+                "description": "Nova aba no menu lateral com exibição das atualizações do projeto."
+            },
+            {
+                "name": "Mini histórico no início",
+                "description": "A seção inicial agora mostra as 3 jogadas mais recentes do usuário."
+            },
+            {
+                "name": "Ranking expandido",
+                "description": "Ranking separado em 4 categorias: pontuação máxima, total, nível e rounds."
+            }
+        ],
+        "changes": [
+            {
+                "name": "Histórico padronizado",
+                "description": "Tabela de histórico alinhada visualmente com as tabelas de ranking."
+            },
+            {
+                "name": "Cards de posição",
+                "description": "Cards da tela inicial exibem status de Top 15 e medalhas para top 3."
+            }
+        ],
+        "removals": [
+            {
+                "name": "Mensagem estática do histórico",
+                "description": "Removida a mensagem fixa sobre 15 registros na aba Histórico."
+            }
+        ]
+    }
+]

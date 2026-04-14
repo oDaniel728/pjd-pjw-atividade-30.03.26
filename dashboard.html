@@ -132,6 +132,11 @@
                                 <i class="fas fa-history"></i> Histórico
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="changelog">
+                                <i class="fas fa-clipboard-list"></i> Changelog
+                            </a>
+                        </li>
                         <hr class="text-white">
                         <li class="nav-item">
                             <a class="nav-link" href="#" data-section="config">
@@ -444,6 +449,32 @@
                     </div>
                 </section>
 
+                <!-- Seção Changelog -->
+                <section id="section-changelog" class="section-content d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">
+                            <i class="fas fa-clipboard-list me-2"></i>Changelog
+                        </h1>
+                        <button class="btn btn-outline-primary" id="btnAtualizarChangelog">
+                            <i class="fas fa-sync-alt me-1"></i> Atualizar
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-dark text-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Versão Atual</h5>
+                            <span class="badge text-bg-secondary" id="changelogVersion">Carregando...</span>
+                        </div>
+                        <div class="card-body" id="changelogContent">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Seção Perfil -->
                 <section id="section-perfil" class="section-content d-none">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -640,6 +671,9 @@
             
             // Carregar histórico
             carregarHistorico(user.uid);
+
+            // Carregar changelog
+            carregarChangelog();
         });
 
         // ============================================
@@ -856,6 +890,7 @@
         async function carregarHistorico(uid) {
             try {
                 const historicoBody = document.getElementById('historicoBody');
+                const historicoMini = document.getElementById('historicoPartidas');
                 if (!historicoBody) return;
 
                 const historicoRef = ref(db, 'historico/' + uid);
@@ -868,6 +903,10 @@
                                 Nenhuma partida registrada.
                             </td>
                         </tr>`;
+
+                    if (historicoMini) {
+                        historicoMini.innerHTML = `<p class="text-muted text-center">Nenhuma partida ainda. Comece a jogar!</p>`;
+                    }
                     return;
                 }
 
@@ -888,32 +927,171 @@
                         </tr>`;
                 }).join('');
 
-                document.getElementById('historicoPartidas').innerHTML = `
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Pontuação</th>
-                                    <th>Total</th>
-                                    <th>Máxima</th>
-                                    <th>Nível</th>
-                                    <th>Rounds</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-3">
-                                        Os 15 últimos registros estão na aba Histórico.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>`;
+                if (historicoMini) {
+                    const partidasRecentes = partidas.slice(0, 3);
 
-                document.getElementById('perfilPartidas').textContent = partidas.length;
+                    historicoMini.innerHTML = `
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Pontuação</th>
+                                        <th>Nível</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${partidasRecentes.map((partida) => {
+                                        const data = partida.data ? new Date(partida.data).toLocaleString('pt-BR') : '-';
+                                        const score = partida.score ?? partida.max_score ?? 0;
+                                        const nivel = partida.nivel ?? 0;
+
+                                        return `
+                                            <tr>
+                                                <td>${data}</td>
+                                                <td><strong>${score}</strong></td>
+                                                <td><strong>${nivel}</strong></td>
+                                            </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>`;
+                }
             } catch (error) {
                 console.error("Erro ao carregar histórico:", error);
+            }
+        }
+
+        // ============================================
+        // CHANGELOG
+        // ============================================
+
+        async function carregarChangelog() {
+            const changelogVersion = document.getElementById('changelogVersion');
+            const changelogContent = document.getElementById('changelogContent');
+            if (!changelogVersion || !changelogContent) return;
+
+            try {
+                changelogVersion.textContent = 'Carregando...';
+                changelogContent.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>`;
+
+                const response = await fetch('./changelog.json', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar changelog.json');
+                }
+
+                const changelog = await response.json();
+                const updates = Array.isArray(changelog) ? changelog : [];
+
+                if (!updates.length) {
+                    changelogVersion.textContent = 'Sem versão';
+                    changelogContent.innerHTML = `
+                        <div class="alert alert-secondary mb-0" role="alert">
+                            Nenhuma atualização disponível no changelog.
+                        </div>`;
+                    return;
+                }
+
+                const currentUpdate = updates[0];
+                changelogVersion.textContent = currentUpdate.version || 'Sem versão';
+
+                const normalizeItems = (items) => {
+                    if (!Array.isArray(items)) return [];
+
+                    return items.map((item) => {
+                        if (typeof item === 'string') {
+                            return { name: item, description: '' };
+                        }
+
+                        if (item && typeof item === 'object') {
+                            return {
+                                name: item.name || 'Sem título',
+                                description: item.description || ''
+                            };
+                        }
+
+                        return { name: 'Sem título', description: '' };
+                    });
+                };
+
+                const renderList = (items, emptyText) => {
+                    if (!items.length) {
+                        return `<li class="list-group-item text-muted">${emptyText}</li>`;
+                    }
+
+                    return items
+                        .map((item) => `
+                            <li class="list-group-item">
+                                <div class="fw-semibold">${item.name}</div>
+                                ${item.description ? `<small class="text-muted">${item.description}</small>` : ''}
+                            </li>`)
+                        .join('');
+                };
+
+                const renderUpdate = (update, index) => {
+                    const additions = normalizeItems(update.additions);
+                    const changes = normalizeItems(update.changes);
+                    const removals = normalizeItems(update.removals);
+                    const isCurrent = index === 0;
+                    const updateTitle = update.version || `Atualização ${index + 1}`;
+
+                    return `
+                        <div class="card mb-3 ${isCurrent ? 'border-primary' : ''}">
+                            <div class="card-header d-flex justify-content-between align-items-center ${isCurrent ? 'bg-primary text-white' : 'bg-secondary text-white'}">
+                                <span>${updateTitle}${isCurrent ? ' (Atual)' : ''}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12 col-lg-4">
+                                        <div class="card h-100 border-success">
+                                            <div class="card-header text-bg-success">
+                                                <strong>Adições</strong>
+                                            </div>
+                                            <ul class="list-group list-group-flush">
+                                                ${renderList(additions, 'Nenhuma adição registrada.')}
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-4">
+                                        <div class="card h-100 border-warning">
+                                            <div class="card-header text-bg-warning text-dark">
+                                                <strong>Mudanças</strong>
+                                            </div>
+                                            <ul class="list-group list-group-flush">
+                                                ${renderList(changes, 'Nenhuma mudança registrada.')}
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-4">
+                                        <div class="card h-100 border-danger">
+                                            <div class="card-header text-bg-danger">
+                                                <strong>Remoções</strong>
+                                            </div>
+                                            <ul class="list-group list-group-flush">
+                                                ${renderList(removals, 'Nenhuma remoção registrada.')}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                };
+
+                changelogContent.innerHTML = updates.map((update, index) => renderUpdate(update, index)).join('');
+            } catch (error) {
+                console.error('Erro ao carregar changelog:', error);
+                changelogVersion.textContent = 'Indisponível';
+                changelogContent.innerHTML = `
+                    <div class="alert alert-danger mb-0" role="alert">
+                        Não foi possível carregar o changelog.
+                    </div>`;
             }
         }
 
@@ -950,6 +1128,10 @@
 
                 if (section === 'historico' && usuarioAtual) {
                     carregarHistorico(usuarioAtual.uid);
+                }
+
+                if (section === 'changelog') {
+                    carregarChangelog();
                 }
             });
         });
@@ -1014,7 +1196,11 @@
             if (usuarioAtual) {
                 carregarHistorico(usuarioAtual.uid);
             }
-        })
+        });
+
+        document.getElementById('btnAtualizarChangelog').addEventListener('click', () => {
+            carregarChangelog();
+        });
 
     </script>
 

@@ -1088,6 +1088,9 @@ let cloudSpawnSoundEffect = null;
 /** @type {string|null} Efeito sonoro a cada 100 pontos */
 let scoreHundredSoundEffect = "score";
 
+/** @type {string|null} Efeito sonoro a cada 1000 pontos */
+let scoreThousandSoundEffect = null;
+
 /** @type {string|null} Efeito sonoro do pulo */
 let dinoJumpSoundEffect = "jump";
 
@@ -1151,6 +1154,11 @@ cloudTimeout = setTimeout(spawnCloud, randomCloudTime);
 /**
  * Event listeners de entrada
  */
+// maxScoreElement.addEventListener("animationend", (ev) => {
+//     if (ev.animationName === "max-score-gain-anim") {
+//         maxScoreElement.classList.remove("max-score-gain");
+//     }
+// });
 document.addEventListener("keydown", (event) => {
     if (crouchKeys.has(event.code)) {
         event.preventDefault();
@@ -1289,7 +1297,7 @@ function once() {
 
 /**
  * @typedef {Object} GameThemeSounds
- * @property {{ scoreHundred?: string|null, backgroundMusic?: string|null }} [game]
+ * @property {{ scoreHundred?: string|null, scoreThousand?: string|null, backgroundMusic?: string|null }} [game]
  * @property {{ cactusSpawn?: string|null, cactusDespawn?: string|null }} [cactus]
  * @property {{ dinoJump?: string|null, dinoLand?: string|null, dinoCrouch?: string|null, dinoDeath?: string|null }} [dino]
  * @property {GameThemeSkySounds} [sky]
@@ -1379,7 +1387,8 @@ const ThemeSystem = {
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
             sounds: {
                 game: {
-                    scoreHundred: "score",
+                    scoreHundred: "exp",
+                    scoreThousand: "levelup",
                     backgroundMusic: "bg-song",
                 },
                 cactus: {
@@ -1658,6 +1667,7 @@ function processTextures() {
     }
 
     scoreHundredSoundEffect = ThemeSystem.getCurrentThemeSound(["game", "scoreHundred"]);
+    scoreThousandSoundEffect = ThemeSystem.getCurrentThemeSound(["game", "scoreThousand"]);
     currentThemeBackgroundMusic = ThemeSystem.getCurrentThemeSound(["game", "backgroundMusic"]);
     cactusSpawnSoundEffect = ThemeSystem.getCurrentThemeSound(["cactus", "cactusSpawn"]);
     cloudSpawnSoundEffect = ThemeSystem.getCurrentThemeSound(["sky", "cloud", "cloudSpawn"]);
@@ -1855,21 +1865,22 @@ scoreInterval = setInterval(() => {
     if (getBooleanConfig("scoreSounds") && Session.score % 100 === 0) {
         AudioService.playAudio(scoreHundredSoundEffect, scoTrack);
     }
+
+    if (getBooleanConfig("scoreSounds") && Session.score % 1000 === 0) {
+        AudioService.playAudio(scoreThousandSoundEffect, scoTrack);
+    }
     
     if (Session.score > Session.max_score) {
-        if (!maxScoreElement.classList.contains("green")) {
-            console.log("high score!");
-            maxScoreElement.classList.add("green");
-        }
         Session.max_score = Session.score;
-
-    } else {
-        if (maxScoreElement.classList.contains("green")) {
-            console.log("low score!");
-            maxScoreElement.classList.remove("green");
-
+    
+        if (!maxScoreElement.classList.contains("max-score-gain")) {
+            maxScoreElement.classList.add("max-score-gain");
         }
-
+    } else {
+        if (maxScoreElement.classList.contains("max-score-gain")) {
+            maxScoreElement.classList.remove("max-score-gain");
+            void maxScoreElement.offsetWidth;
+        }
     }
 
     if (Session.score == 0) {

@@ -383,6 +383,46 @@ Faz o dinossauro subir e depois voltar ao chão.
 }
 .placar span#max-score {
     color: inherit; /* Cor laranja para o recorde */
+    display: inline-block;
+}
+.max-score-gain {
+    animation: max-score-gain-anim 2s infinite, max-score-gain-anim2 8s infinite;
+    color: #fcff43ff !important;
+}
+@keyframes max-score-gain-anim2 {
+    0% {
+        rotate: 0deg;
+        animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1);
+    }
+    25% {
+        rotate: 3deg;
+        animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    50% {
+        rotate: 0deg;
+        animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1);
+    }
+    75% {
+        rotate: -3deg;
+        animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    100% {
+        rotate: 0deg;
+        animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1);
+    }
+}
+@keyframes max-score-gain-anim {
+    0% {
+        scale: 1;
+        animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    }
+    50% {
+        scale: 1.2;
+        animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    }
+    100% {
+        scale: 1;
+    }
 }
 
 /* =========================================================
