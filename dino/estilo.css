@@ -10,6 +10,14 @@
     --game-over-msg-color1: #370000c1;
     --game-over-msg-color2: #d90000;
 
+    --cactus-fade-in-duration: 0.5s;
+    --cactus-move-duration: 4s;
+    --cactus-grow-duration: 0.2s;
+    --cactus-initial-scale: 0.5;
+    --cactus-final-scale: 1;
+
+    --dino-jump-animation-duration: 0.5s;
+
     --possible-phrases: "Game Over"
                       | "Fim de Jogo"
                       | "Você Perdeu"
@@ -110,20 +118,30 @@ body {
    Personagem principal do jogo.
    ========================================================= */
 .dino {
+    --flip-x: 1;
+    --flip-y: 1;
+    --rotation: 0deg;
+    --rotation-offset: 0deg;
+    --scale-x: 1;
+    --scale-y: 1;
+    --bottom: 0px;
+
     position: absolute;      /* Posicionamento livre dentro do palco */
-    bottom: 50px;            /* Fica exatamente acima do chão (que tem 50px de altura) */
+    bottom: calc(var(--bottom) + 50px);            /* Fica exatamente acima do chão (que tem 50px de altura) */
     left: 80px;              /* Distância da borda esquerda */
     font-size: 50px;         /* Tamanho do caractere/emoji do dinossauro */
     line-height: 1;          /* Remove espaçamento extra vertical da linha */
     z-index: 99;              /* Coloca o dinossauro na frente de alguns elementos */
-    --flip-x: 1;
-    --flip-y: 1;
-    --rotation: 0deg;
-    scale: var(--flip-x) var(--flip-y);
-    transform: rotate(var(--rotation));
+    scale: calc(var(--scale-x) * var(--flip-x)) calc(var(--scale-y) * var(--flip-y));
+    transform: rotate(calc(var(--rotation) + var(--rotation-offset)));
     font-family: var(--font-monospace);
-    /* Animação de pulo (desativada por enquanto) */
 }
+.crouch {
+    /* --scale-y: 0.6; */
+    --rotation-offset: -20deg;
+    --bottom: -10px;
+}
+
 .flipX {
     --flip-x: -1;
 }
@@ -165,8 +183,8 @@ Faz o dinossauro subir e depois voltar ao chão.
 }
 .jump {
     animation: 
-        pular 0.5s,
-        rotate-anim 0.5s linear;
+        pular var(--dino-jump-animation-duration),
+        rotate-anim var(--dino-jump-animation-duration) linear;
 }
 
 /* =========================================================
@@ -181,8 +199,22 @@ Faz o dinossauro subir e depois voltar ao chão.
     font-size: 45px;                           /* Tamanho do caractere/emoji do cacto */
     line-height: 1;                            /* Remove espaçamento vertical extra */
     z-index: 5;                                /* Fica atrás do dinossauro */
-    animation: mover-cacto linear forwards; /* Movimento contínuo do cacto */
+    animation: 
+        fade-in var(--cactus-fade-in-duration) linear forwards,
+        grow-in var(--cactus-grow-duration) linear forwards,
+        mover-cacto var(--cactus-move-duration) linear forwards
+
+    ; /* Movimento contínuo do cacto */
     font-family: var(--font-monospace);
+}
+
+@keyframes grow-in {
+    0% {
+        transform: scale(var(--cactus-initial-scale));
+    }
+    100% {
+        transform: scale(var(--cactus-final-scale));
+    }
 }
 
 /* =========================================================
@@ -218,7 +250,8 @@ Faz o dinossauro subir e depois voltar ao chão.
     z-index: 3;                                /* Fica mais ao fundo */
     animation: 
         mover-nuvem linear forwards,
-        mover-nuvem-y 4s linear infinite;
+        mover-nuvem-y 4s linear infinite,
+        nuvem-transparencia 4s linear infinite
     
         ;/* Movimento contínuo e lento */
     font-family: var(--font-monospace);
@@ -232,6 +265,23 @@ Faz o dinossauro subir e depois voltar ao chão.
 @keyframes mover-nuvem {
     0%   { right: -100px; } /* Início fora da tela */
     100% { right: 900px; }  /* Vai até ultrapassar todo o palco */
+}
+@keyframes nuvem-transparencia {
+    0% {
+        opacity: 0;
+    }
+    20% {
+        opacity: .7;
+    }
+    50% {
+        opacity: .8;
+    }
+    /* 80% {
+        opacity: .7;
+    } */
+    100% {
+        opacity: 0;
+    }
 }
 @keyframes mover-nuvem-y {
     0% {
@@ -263,8 +313,8 @@ Faz o dinossauro subir e depois voltar ao chão.
     z-index: 0;
     animation: 
         orbita-x var(--daynight-cycle-duration) linear infinite,
-        orbita-y var(--daynight-cycle-duration) infinite
-
+        orbita-y var(--daynight-cycle-duration) infinite,
+        orbita-y-pulse var(--daynight-cycle-duration) infinite
     ;
     font-family: var(--font-monospace);
 }
@@ -285,6 +335,20 @@ Faz o dinossauro subir e depois voltar ao chão.
         animation-timing-function: cubic-bezier(.14,0,.82,.41);
     }
     100% { top: 250px; }
+}
+@keyframes orbita-y-pulse {
+    0% {
+        transform: scale(1);
+        animation-timing-function: cubic-bezier(.14,0,.82,.41);
+    }
+    50% {
+        transform: scale(2);
+        animation-timing-function: cubic-bezier(.17,.67,.54,1);
+    }
+    100% {
+        transform: scale(1);
+        animation-timing-function: cubic-bezier(.14,0,.82,.41);
+    }
 }
 
 .sol.paused {
@@ -415,6 +479,9 @@ p#phrase {
 .gameOverMsg * {
     font-family: var(--font-press-start);
 }
+.gameOverMsg, .gameOverMsg * {
+    cursor: default;
+}
 
 .hidden {
     display: none;
@@ -424,6 +491,43 @@ p#phrase {
 }
 .animateTransparency {
     transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.gold {
+    color: #fcff43ff !important;
+}
+
+.anim {
+    --anim-scale: none;
+    --anim-rotate: none;
+    --anim-position: none;
+    --anim-color: none;
+    --anim-opacity: none;
+
+    animation: var(--anim-scale), var(--anim-rotate), var(--anim-position), var(--anim-color), var(--anim-opacity);
+}
+
+.anim-pulse {
+    --anim-scale: pulse 1s ease-in-out infinite;
+}
+
+.anim-rotate {
+    --anim-rotate: rotate 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { scale: 1; }
+    50% { scale: 1.1; }
+    100% { scale: 1; }
+}
+
+@keyframes rotate {
+    0% { rotate: 3deg; }
+    50% { rotate: -3deg; }
+    100% { rotate: 3deg; }
+}
+@keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
 
 

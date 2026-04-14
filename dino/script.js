@@ -419,6 +419,8 @@ const AudioService = {
      * @param {string|HTMLAudioElement} track - Track ou nome da track
      */
     playAudio(name, track) {
+        if (!name) return;
+
         const pool = this.cache.get(name);
         if (!pool || pool.length === 0) return;
 
@@ -791,6 +793,7 @@ const startMsg = document.getElementById('start-msg');
 const gameOverMsg = document.querySelector('.gameOverMsg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 const gameOverPhrase = document.querySelector("p#phrase");
+const gameOverRecord = document.querySelector("p#record");
 const configElements = document.querySelectorAll("[data-config]");
 
 /** @type {HTMLElement|null} Elemento do sol/lua */
@@ -800,9 +803,10 @@ let solElement = null;
  * Altera uma variável CSS
  * @param {string} name - Nome da variável
  * @param {any} value - Novo valor
+ * @param {HTMLElement} [object=document.documentElement] - Elemento alvo (padrão: root)
  */
-function changeCSSVariable(name, value) {
-    document.documentElement.style.setProperty(`--${name}`, value.toString());
+function changeCSSVariable(name, value, object = document.documentElement) {
+    object.style.setProperty(`--${name}`, value.toString());
 }
 
 /**
@@ -842,6 +846,51 @@ function getRandomGameOverPhrase() {
 
     const index = Math.floor(Math.random() * phrases.length);
     return phrases[index];
+}
+
+/** @type {string} Duração padrão da animação de pulo */
+const defaultDinoJumpAnimationDuration = getCSSVariable("dino-jump-animation-duration") || "0.5s";
+
+/**
+ * Converte a duração CSS do pulo para milissegundos
+ * @returns {number} Duração em ms
+ */
+function getDinoJumpAnimationDurationMs() {
+    const duration = getCSSVariable("dino-jump-animation-duration") || defaultDinoJumpAnimationDuration;
+    const parsed = Number.parseFloat(duration);
+
+    return Number.isFinite(parsed) ? parsed * 1000 : 500;
+}
+
+/**
+ * Define a duração da animação de pulo do dinossauro
+ * @param {string} duration - Duração CSS
+ */
+function setDinoJumpAnimationDuration(duration) {
+    changeCSSVariable("dino-jump-animation-duration", duration);
+}
+
+const crouchKeys = new Set(["ShiftLeft", "ShiftRight", "KeyS", "ArrowDown"]);
+
+function startCrouch() {
+    if (!dino || !gameStarted || isGameOver) return;
+    if (crouching) return;
+
+    crouching = true;
+    dino.classList.add("crouch");
+    setDinoJumpAnimationDuration("0.2s");
+
+    if (dinoCrouchSoundEffect) {
+        AudioService.playAudio(dinoCrouchSoundEffect, sfxTrack);
+    }
+}
+
+function stopCrouch() {
+    if (!dino) return;
+
+    crouching = false;
+    dino.classList.remove("crouch");
+    setDinoJumpAnimationDuration(defaultDinoJumpAnimationDuration);
 }
 
 /** @type {HTMLAudioElement|null} Track de efeitos sonoros */
@@ -961,6 +1010,9 @@ let checkCollisionInterval;
 /** @type {boolean} Indica se o dinossauro está pulando */
 let jumping = false;
 
+/** @type {boolean} Indica se o dinossauro está agachado */
+let crouching = false;
+
 /** @type {boolean} Indica se o jogo foi iniciado */
 let gameStarted = false;
 
@@ -1006,6 +1058,12 @@ let cloudScaleRandomness = 1;
 /** @type {number} Rotação do dinossauro em graus */
 let dinoRotation = 0;
 
+/** @type {(event: AnimationEvent) => void | null} Handler ativo do fim do pulo */
+let jumpAnimationEndHandler = null;
+
+/** @type {number} Recorde no início da rodada */
+let maxScoreAtGameStart = 0;
+
 /** @type {number} Duração do ciclo dia/noite em segundos */
 const daynightCycleDuration = 30;
 
@@ -1020,6 +1078,33 @@ let dinoTexture = "🦖";
 
 /** @type {string} Textura da nuvem */
 let cloudTexture = "☁️";
+
+/** @type {string} Efeito sonoro para spawn de cactos */
+let cactusSpawnSoundEffect = "cactus";
+
+/** @type {string|null} Efeito sonoro para spawn de nuvens */
+let cloudSpawnSoundEffect = null;
+
+/** @type {string|null} Efeito sonoro a cada 100 pontos */
+let scoreHundredSoundEffect = "score";
+
+/** @type {string|null} Efeito sonoro do pulo */
+let dinoJumpSoundEffect = "jump";
+
+/** @type {string|null} Efeito sonoro ao aterrissar */
+let dinoLandSoundEffect = null;
+
+/** @type {string|null} Efeito sonoro ao agachar */
+let dinoCrouchSoundEffect = null;
+
+/** @type {string|null} Efeito sonoro ao morrer */
+let dinoDeathSoundEffect = "hit";
+
+/** @type {string|null} ID da música de fundo do tema atual */
+let currentThemeBackgroundMusic = "bg-song";
+
+/** @type {string|null} Nome do tema da playlist ativa */
+let activeThemeForBgm = null;
 
 /** @type {string} Cor padrão de fundo 1 */
 const defaultBackgroundColor1 = getCSSVariable("background-color1");
@@ -1067,6 +1152,12 @@ cloudTimeout = setTimeout(spawnCloud, randomCloudTime);
  * Event listeners de entrada
  */
 document.addEventListener("keydown", (event) => {
+    if (crouchKeys.has(event.code)) {
+        event.preventDefault();
+        startCrouch();
+        return;
+    }
+
     if (
         event.code === 'Space' ||
         event.code === "ArrowUp" || // Questão 3
@@ -1074,6 +1165,11 @@ document.addEventListener("keydown", (event) => {
     ) {
         handleAction(true);
     }
+});
+
+document.addEventListener("keyup", (event) => {
+    if (!crouchKeys.has(event.code)) return;
+    stopCrouch();
 });
 
 board.addEventListener('pointerdown', () => {
@@ -1084,8 +1180,6 @@ board.addEventListener('pointerdown', () => {
  * Inicia música de fundo
  */
 function startBackgroundMusic() {
-    if (musicPlaying) return;
-    musicPlaying = true;
     AudioService.setTrackVolume(
         "sfx",
         getBooleanConfig("sfxActivated") ? defaultSfxVolume : 0
@@ -1095,15 +1189,34 @@ function startBackgroundMusic() {
         getBooleanConfig("bgmActivated") ? defaultBgmVolume : 0
     );
 
-    const bgmPlaylist = PlaylistService.create(
-        "bgm",
-        ["bg-song"],
+    if (musicPlaying) return;
+    musicPlaying = true;
+
+    playThemeBackgroundMusic();
+}
+
+function playThemeBackgroundMusic() {
+    if (!musicPlaying || !bgmTrack) return;
+
+    const theme = ThemeSystem.getCurrentTheme();
+    const themeName = theme?.name || "default";
+    const trackId = currentThemeBackgroundMusic;
+
+    if (!trackId) return;
+    if (activeThemeForBgm === themeName) return;
+
+    PlaylistService.stop("bgm-theme");
+    PlaylistService.create(
+        "bgm-theme",
+        [trackId],
         {
             loop: true,
             track: bgmTrack
         }
     );
-    PlaylistService.play(bgmPlaylist);
+    PlaylistService.play("bgm-theme");
+
+    activeThemeForBgm = themeName;
 }
 
 document.addEventListener("load", () => {
@@ -1123,6 +1236,77 @@ function once() {
 }
 
 /**
+ * @typedef {Object} GameThemeTextures
+ * @property {string} cactus
+ * @property {string} dino
+ * @property {string} cloud
+ */
+
+/**
+ * @typedef {Object} GameThemeSun
+ * @property {string} [day]
+ * @property {string} [sunset]
+ * @property {string} [night]
+ */
+
+/**
+ * @typedef {Object} GameThemeVariantColors
+ * @property {string} bg1
+ * @property {string} bg2
+ * @property {string} gr1
+ * @property {string} gr2
+ * @property {string} gr3
+ */
+
+/**
+ * @typedef {Object} GameThemeVariants
+ * @property {GameThemeVariantColors} day
+ * @property {GameThemeVariantColors} sunset
+ * @property {GameThemeVariantColors} night
+ */
+
+/**
+ * @typedef {Object} GameThemeSkyCloudSounds
+ * @property {string|null} [cloudSpawn]
+ * @property {string|null} [cloudDespawn]
+ */
+
+/**
+ * @typedef {Object} GameThemeSkySunSounds
+ * @property {string|null} [dayStarted]
+ * @property {string|null} [dayEnded]
+ * @property {string|null} [sunsetStarted]
+ * @property {string|null} [sunsetEnded]
+ * @property {string|null} [nightStarted]
+ * @property {string|null} [nightEnded]
+ */
+
+/**
+ * @typedef {Object} GameThemeSkySounds
+ * @property {GameThemeSkyCloudSounds} [cloud]
+ * @property {GameThemeSkySunSounds} [sun]
+ */
+
+/**
+ * @typedef {Object} GameThemeSounds
+ * @property {{ scoreHundred?: string|null, backgroundMusic?: string|null }} [game]
+ * @property {{ cactusSpawn?: string|null, cactusDespawn?: string|null }} [cactus]
+ * @property {{ dinoJump?: string|null, dinoLand?: string|null, dinoCrouch?: string|null, dinoDeath?: string|null }} [dino]
+ * @property {GameThemeSkySounds} [sky]
+ */
+
+/**
+ * @typedef {Object} GameTheme
+ * @property {string} name
+ * @property {GameThemeTextures} textures
+ * @property {GameThemeSun} [sun]
+ * @property {GameThemeSounds} [sounds]
+ * @property {GameThemeVariants} variants
+ */
+
+
+
+/**
  * Sistema de temas com variantes dia/noite/entardecer
  */
 const ThemeSystem = {
@@ -1135,7 +1319,7 @@ const ThemeSystem = {
     /** @type {string|null} Variante alvo durante transição */
     transitionTarget: null,
 
-    /** @type {Array} Lista de temas disponíveis */
+    /** @type {GameTheme[]} Lista de temas disponíveis */
     themes: [
         {
             name: "sky",
@@ -1150,7 +1334,7 @@ const ThemeSystem = {
         {
             name: "neon",
             textures: { cactus: "🔺", dino: "🟨", cloud: "⬜◽" },
-            sun: { day: "", sunset: "", night: "" },
+            sun: { day: " ", sunset: " ", night: " " },
             variants: {
                 day: { bg1: "#6797fe", bg2: "#3a5fb0", gr1: "#8250eb", gr2: "#4e2673", gr3: "#2b1340" },
                 sunset: { bg1: "#FF6B6B", bg2: "#FFA500", gr1: "#FF4D6D", gr2: "#C1121F", gr3: "#780000" },
@@ -1160,7 +1344,13 @@ const ThemeSystem = {
         {
             name: "dark",
             textures: { cactus: "🔥", dino: "💧", cloud: "☁️" },
-            sun: { day: "", sunset: "", night: "" },
+            sounds: {
+                cactus: {
+                    cactusSpawn: "fire",
+                    cactusDespawn: "fire_ext"
+                }
+            },
+            sun: { day: " ", sunset: " ", night: " " },
             variants: {
                 day: { bg1: "#00002d", bg2: "#020215", gr1: "#aaaaaa", gr2: "#333333", gr3: "#111111" },
                 sunset: { bg1: "#1a051e", bg2: "#36052c", gr1: "#E8B4B8", gr2: "#A0616D", gr3: "#5D3E3E" },
@@ -1171,6 +1361,12 @@ const ThemeSystem = {
             name: "forest",
             textures: { cactus: "🌳", dino: "🦕", cloud: "🌧️" },
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
+            sounds: {
+                cactus: {
+                    cactusSpawn: "wood",
+                    cactusDespawn: "grass"
+                }
+            },
             variants: {
                 day: { bg1: "#201f2d", bg2: "#39365a", gr1: "#03491b", gr2: "#003000", gr3: "#001800" },
                 sunset: { bg1: "#3D2817", bg2: "#5C3D2E", gr1: "#8B4513", gr2: "#654321", gr3: "#4A2511" },
@@ -1181,6 +1377,38 @@ const ThemeSystem = {
             name: "default",
             textures: { cactus: "🌵", dino: "🦖", cloud: "☁️" },
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
+            sounds: {
+                game: {
+                    scoreHundred: "score",
+                    backgroundMusic: "bg-song",
+                },
+                cactus: {
+                    cactusSpawn: "cactus",
+                    cactusDespawn: "grass",
+                },
+                dino: {
+                    dinoJump: "jump",
+                    dinoLand: null,
+                    dinoCrouch: null,
+                    dinoDeath: "hit",
+                },
+                sky: {
+                    cloud: {
+                        cloudSpawn: "cloud",
+                        cloudDespawn: null,
+                    },
+                    sun: {
+                        dayStarted: null,
+                        dayEnded: null,
+
+                        sunsetStarted: null,
+                        sunsetEnded: null,
+
+                        nightStarted: null,
+                        nightEnded: null
+                    }
+                }
+            },
             variants: {
                 day: { bg1: "#87CEEB", bg2: "#42afda", gr1: "#C4A95A", gr2: "#8B7355", gr3: "#654321" },
                 sunset: { bg1: "#FF6B6B", bg2: "#FF8C42", gr1: "#FFA500", gr2: "#FF6347", gr3: "#DC143C" },
@@ -1235,12 +1463,59 @@ const ThemeSystem = {
     },
 
     /**
+     * Obtém o tema atual
+     * @returns {GameTheme} Tema atual
+     */
+    getCurrentTheme() {
+        return this.themes[this.currentThemeIndex] || this.themes[0];
+    },
+
+    /**
+     * Obtém o tema padrão (nome default)
+     * @returns {GameTheme} Tema padrão
+     */
+    getDefaultTheme() {
+        return this.themes.find((theme) => theme.name === "default") || this.themes[0];
+    },
+
+    /**
+     * Lê um som do tema por caminho
+     * @param {GameTheme} theme - Tema de origem
+     * @param {string[]} path - Caminho de propriedades
+     * @returns {string|null|undefined} Som encontrado
+     */
+    readThemeSound(theme, path) {
+        let value = theme?.sounds;
+
+        for (const key of path) {
+            if (!value || typeof value !== "object") return undefined;
+            value = value[key];
+        }
+
+        return value;
+    },
+
+    /**
+     * Obtém som do tema atual com fallback para o tema default
+     * @param {string[]} path - Caminho de propriedades
+     * @returns {string|null} Nome do áudio
+     */
+    getCurrentThemeSound(path) {
+        const currentThemeValue = this.readThemeSound(this.getCurrentTheme(), path);
+        if (currentThemeValue !== undefined && currentThemeValue !== null) {
+            return currentThemeValue;
+        }
+
+        const defaultThemeValue = this.readThemeSound(this.getDefaultTheme(), path);
+        return defaultThemeValue ?? null;
+    },
+
+    /**
      * Obtém texturas do tema atual
      * @returns {Object} Texturas (cacto, dino, nuvem)
      */
     getCurrentTextures() {
-        if (this.currentThemeIndex < 0) return null;
-        return this.themes[this.currentThemeIndex].textures;
+        return this.getCurrentTheme().textures;
     },
 
     /**
@@ -1248,8 +1523,7 @@ const ThemeSystem = {
      * @returns {string} Emoji do sol ou lua
      */
     getCurrentSun() {
-        if (this.currentThemeIndex < 0) return "☀️";
-        const theme = this.themes[this.currentThemeIndex];
+        const theme = this.getCurrentTheme();
         if (!theme.sun) return "☀️";
         return theme.sun[this.currentVariant] || "☀️";
     }
@@ -1383,6 +1657,17 @@ function processTextures() {
         cloudTexture = textures.cloud;
     }
 
+    scoreHundredSoundEffect = ThemeSystem.getCurrentThemeSound(["game", "scoreHundred"]);
+    currentThemeBackgroundMusic = ThemeSystem.getCurrentThemeSound(["game", "backgroundMusic"]);
+    cactusSpawnSoundEffect = ThemeSystem.getCurrentThemeSound(["cactus", "cactusSpawn"]);
+    cloudSpawnSoundEffect = ThemeSystem.getCurrentThemeSound(["sky", "cloud", "cloudSpawn"]);
+    dinoJumpSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoJump"]);
+    dinoLandSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoLand"]);
+    dinoCrouchSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoCrouch"]);
+    dinoDeathSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoDeath"]);
+
+    playThemeBackgroundMusic();
+
     dino.innerText = dinoTexture;
     nuvem.innerText = cloudTexture;
 }
@@ -1398,8 +1683,14 @@ function startGame() {
     gameStarted = true;
     Session.score = 0;
     Session.rounds++;
+    maxScoreAtGameStart = Session.max_score;
     dinoRotation = 0;
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
+    stopCrouch();
+
+    if (gameOverRecord) {
+        gameOverRecord.classList.add("transparent");
+    }
     
     // Criar elemento do sol
     if (solElement) {
@@ -1465,6 +1756,12 @@ function handleGameOver() {
     if (gameOverPhrase) {
         gameOverPhrase.innerText = getRandomGameOverPhrase();
     }
+
+    const quebrouRecorde = score > maxScoreAtGameStart;
+    if (gameOverRecord) {
+        gameOverRecord.classList.toggle("transparent", !quebrouRecorde);
+    }
+
     // Session.rounds++;
     saveUserData();
     document
@@ -1481,7 +1778,7 @@ function handleGameOver() {
         solElement.classList.add("paused");
     }
     dino.classList.add("paused");
-    AudioService.playAudio("hit", sfxTrack);
+    AudioService.playAudio(dinoDeathSoundEffect, sfxTrack);
     gameOverMsg.classList.remove('transparent');
 }
 
@@ -1496,7 +1793,7 @@ function jump() {
     if (jumping) return;
     jumping = true;
 
-    AudioService.playAudio("jump", sfxTrack);
+    AudioService.playAudio(dinoJumpSoundEffect, sfxTrack);
 
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
 
@@ -1504,15 +1801,30 @@ function jump() {
 
     void dino.offsetWidth;
 
-    dino.classList.add('jump');
+    if (jumpAnimationEndHandler) {
+        dino.removeEventListener("animationend", jumpAnimationEndHandler);
+    }
 
-    setTimeout (() => {
+    jumpAnimationEndHandler = (event) => {
+        if (event.animationName !== "pular") return;
+
+        dino.removeEventListener("animationend", jumpAnimationEndHandler);
+        jumpAnimationEndHandler = null;
+
         jumping = false;
-        if (!gameStarted) return;
         dino.classList.remove('jump');
+        if (!gameStarted) return;
+
         dinoRotation += 180;
         dino.style.setProperty("--rotation", `${dinoRotation}deg`);
-    }, 500);
+
+        if (dinoLandSoundEffect) {
+            AudioService.playAudio(dinoLandSoundEffect, sfxTrack);
+        }
+    };
+
+    dino.addEventListener("animationend", jumpAnimationEndHandler);
+    dino.classList.add('jump');
 }
 
 /**
@@ -1541,7 +1853,7 @@ scoreInterval = setInterval(() => {
     updateThemeVariant(Session.score);
     
     if (getBooleanConfig("scoreSounds") && Session.score % 100 === 0) {
-        AudioService.playAudio("score", scoTrack);
+        AudioService.playAudio(scoreHundredSoundEffect, scoTrack);
     }
     
     if (Session.score > Session.max_score) {
@@ -1596,7 +1908,13 @@ function spawnCactus() {
         const cactus = document.createElement('div');
         cactus.classList.add("cacto");
         cactus.innerText = cactusTexture;
-        cactus.style.animationDuration = `${cactusAnimationDuration + (Math.random() * cactusAnimationDurationRandomness)}s`;
+        
+        const cactusMoveDuration = `${cactusAnimationDuration + (Math.random() * cactusAnimationDurationRandomness)}s`;
+        changeCSSVariable("cactus-move-duration", cactusMoveDuration, cactus);
+
+        // AudioService.playAudio("cactus", sfxTrack);
+        AudioService.playAudio(cactusSpawnSoundEffect, sfxTrack);
+
         board.appendChild(cactus);
         setTimeout(() => {
             if (!gameStarted) return;
@@ -1620,6 +1938,10 @@ function spawnCloud() {
         
         cloud.classList.add("nuvem");
         cloud.innerText = cloudTexture;
+
+        if (cloudSpawnSoundEffect) {
+            AudioService.playAudio(cloudSpawnSoundEffect, sfxTrack);
+        }
 
         // posição vertical aleatória
         const top = Math.random() * 50 + 40;
