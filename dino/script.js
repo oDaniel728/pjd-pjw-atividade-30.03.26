@@ -6,6 +6,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, update, get, onValue, push, child, remove, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+/** @typedef {import("./types.d.ts").GameThemeTextures} GameThemeTextures */
+/** @typedef {import("./types.d.ts").GameThemeSun} GameThemeSun */
+/** @typedef {import("./types.d.ts").GameThemeVariantColors} GameThemeVariantColors */
+/** @typedef {import("./types.d.ts").GameThemeVariants} GameThemeVariants */
+/** @typedef {import("./types.d.ts").GameThemeSkyCloudSounds} GameThemeSkyCloudSounds */
+/** @typedef {import("./types.d.ts").GameThemeSkySunSounds} GameThemeSkySunSounds */
+/** @typedef {import("./types.d.ts").GameThemeSkySounds} GameThemeSkySounds */
+/** @typedef {import("./types.d.ts").GameThemeSounds} GameThemeSounds */
+/** @typedef {import("./types.d.ts").GameTheme} GameTheme */
+/** @typedef {import("./types.d.ts").Playlist} Playlist */
+/** @typedef {import("./types.d.ts").PlaylistOptions} PlaylistOptions */
+
 /** @type {Object} Configuração do Firebase */
 const firebaseConfig = {
     apiKey: "AIzaSyCBZGph8g79sGTWu5CVynTpeXaUOar-wn8",
@@ -640,24 +652,6 @@ const PlaylistService = {
     }
 };
 
-/**
- * @typedef {Object} Playlist
- * @property {string} name
- * @property {string[]} audios
- * @property {number} index
- * @property {boolean} loop
- * @property {boolean} shuffle
- * @property {boolean} playing
- * @property {HTMLAudioElement|string|null} track
- * @property {HTMLAudioElement|null} current
- */
-
-/**
- * @typedef {Object} PlaylistOptions
- * @property {boolean} [loop]
- * @property {boolean} [shuffle]
- * @property {HTMLAudioElement|string} [track]
- */
 AudioService.updateConfig();
 
 /**
@@ -835,6 +829,7 @@ const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
 const gameOverPhrase = document.querySelector("p#phrase");
 const gameOverRecord = document.querySelector("p#record");
 const configElements = document.querySelectorAll("[data-config]");
+const chao = document.querySelector(".chao");
 
 /** @type {HTMLElement|null} Elemento do sol/lua */
 let solElement = null;
@@ -910,6 +905,49 @@ function setDinoJumpAnimationDuration(duration) {
     changeCSSVariable("dino-jump-animation-duration", duration);
 }
 
+/**
+ * Duração entre passos do dino baseada na velocidade do cacto
+ * @returns {number} Intervalo em ms
+ */
+function getDinoFootstepIntervalMs() {
+    const steps = Math.max(1, footstepsPerAnimation);
+    return Math.max(120, Math.round((cactusAnimationDuration * 1000) / steps));
+}
+
+/**
+ * Cancela a agenda atual de passos do dino
+ */
+function clearDinoFootsteps() {
+    if (!dinoFootstepTimeout) return;
+
+    clearTimeout(dinoFootstepTimeout);
+    dinoFootstepTimeout = null;
+}
+
+/**
+ * Agenda o próximo passo do dino
+ */
+function scheduleDinoFootsteps() {
+    clearDinoFootsteps();
+
+    const tick = () => {
+        if (!gameStarted || isGameOver) {
+            dinoFootstepTimeout = null;
+            return;
+        }
+
+        if (!jumping && !crouching && dinoWalkSoundEffect) {
+            AudioService.playAudio(dinoWalkSoundEffect, sfxTrack);
+            dinoFootstepTimeout = setTimeout(tick, getDinoFootstepIntervalMs());
+            return;
+        }
+
+        dinoFootstepTimeout = setTimeout(tick, 120);
+    };
+
+    dinoFootstepTimeout = setTimeout(tick, getDinoFootstepIntervalMs());
+}
+
 const crouchKeys = new Set(["ShiftLeft", "ShiftRight", "KeyS", "ArrowDown"]);
 
 function startCrouch() {
@@ -932,6 +970,30 @@ function stopCrouch() {
     crouching = false;
     dino.classList.remove("crouch");
     setDinoJumpAnimationDuration(defaultDinoJumpAnimationDuration);
+}
+
+/**
+ * Faz o chão tremer rapidamente ao aterrissar
+ */
+function triggerGroundImpact() {
+    if (!chao) return;
+
+    const groundShakeSound = ThemeSystem.getCurrentThemeSound(["ground", "groundShake"]);
+    if (groundShakeSound) {
+        AudioService.playAudio(groundShakeSound, sfxTrack);
+    }
+
+    chao.classList.remove("u-vibrate");
+    void chao.offsetWidth;
+    chao.classList.add("u-vibrate");
+
+    chao.addEventListener(
+        "animationend",
+        () => {
+            chao.classList.remove("u-vibrate");
+        },
+        { once: true }
+    );
 }
 
 /** @type {HTMLAudioElement|null} Track de efeitos sonoros */
@@ -1145,6 +1207,9 @@ let dinoCrouchSoundEffect = null;
 /** @type {string|null} Efeito sonoro ao morrer */
 let dinoDeathSoundEffect = "hit";
 
+/** @type {string|null} Efeito sonoro do passo do dino */
+let dinoWalkSoundEffect = "stone";
+
 /** @type {string|null} ID da música de fundo do tema atual */
 let currentThemeBackgroundMusic = "bg-song";
 
@@ -1165,6 +1230,12 @@ const defaultGroundColor2 = getCSSVariable("ground-color2");
 
 /** @type {string} Cor padrão do chão 3 */
 const defaultGroundColor3 = getCSSVariable("ground-color3");
+
+/** @type {number} Passos por animação do cacto */
+let footstepsPerAnimation = 5;
+
+/** @type {number|null} ID do timeout dos passos do dino */
+let dinoFootstepTimeout;
 
 /**
  * Aplica duração do ciclo dia/noite
@@ -1297,77 +1368,6 @@ function once() {
 }
 
 /**
- * @typedef {Object} GameThemeTextures
- * @property {string} cactus
- * @property {string} dino
- * @property {string} cloud
- */
-
-/**
- * @typedef {Object} GameThemeSun
- * @property {string} [day]
- * @property {string} [sunset]
- * @property {string} [night]
- */
-
-/**
- * @typedef {Object} GameThemeVariantColors
- * @property {string} bg1
- * @property {string} bg2
- * @property {string} gr1
- * @property {string} gr2
- * @property {string} gr3
- */
-
-/**
- * @typedef {Object} GameThemeVariants
- * @property {GameThemeVariantColors} day
- * @property {GameThemeVariantColors} sunset
- * @property {GameThemeVariantColors} night
- */
-
-/**
- * @typedef {Object} GameThemeSkyCloudSounds
- * @property {string|null} [cloudSpawn]
- * @property {string|null} [cloudDespawn]
- */
-
-/**
- * @typedef {Object} GameThemeSkySunSounds
- * @property {string|null} [dayStarted]
- * @property {string|null} [dayEnded]
- * @property {string|null} [sunsetStarted]
- * @property {string|null} [sunsetEnded]
- * @property {string|null} [nightStarted]
- * @property {string|null} [nightEnded]
- */
-
-/**
- * @typedef {Object} GameThemeSkySounds
- * @property {GameThemeSkyCloudSounds} [cloud]
- * @property {GameThemeSkySunSounds} [sun]
- */
-
-/**
- * @typedef {Object} GameThemeSounds
- * @property {{ scoreHundred?: string|null, scoreThousand?: string|null, backgroundMusic?: string|null }} [game]
- * @property {{ cactusSpawn?: string|null, cactusDespawn?: string|null }} [cactus]
- * @property {{ dinoJump?: string|null, dinoLand?: string|null, dinoCrouch?: string|null, dinoDeath?: string|null }} [dino]
- * @property {GameThemeSkySounds} [sky]
- */
-
-/**
- * @typedef {Object} GameTheme
- * @property {string} name
- * @property {GameThemeTextures} textures
- * @property {GameThemeSun} [sun]
- * @property {GameThemeSounds} [sounds]
- * @property {GameThemeVariants} variants
- */
-
-
-
-/**
  * Sistema de temas com variantes dia/noite/entardecer
  */
 const ThemeSystem = {
@@ -1450,13 +1450,17 @@ const ThemeSystem = {
                 },
                 dino: {
                     dinoJump: "jump",
-                    dinoLand: null,
+                    dinoLand: "fall",
                     dinoCrouch: null,
                     dinoDeath: "hit",
+                    dinoWalk: "stone",
+                },
+                ground: {
+                    groundShake: "sand",
                 },
                 sky: {
                     cloud: {
-                        cloudSpawn: "cloud",
+                        cloudSpawn: "snow",
                         cloudDespawn: null,
                     },
                     sun: {
@@ -1728,6 +1732,7 @@ function processTextures() {
     dinoLandSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoLand"]);
     dinoCrouchSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoCrouch"]);
     dinoDeathSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoDeath"]);
+    dinoWalkSoundEffect = ThemeSystem.getCurrentThemeSound(["dino", "dinoWalk"]);
 
     playThemeBackgroundMusic();
 
@@ -1750,6 +1755,7 @@ function startGame() {
     dinoRotation = 0;
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
     stopCrouch();
+    scheduleDinoFootsteps();
 
     if (gameOverRecord) {
         gameOverRecord.classList.add("transparent");
@@ -1812,6 +1818,7 @@ function handleAction(spacePressed) {
 function handleGameOver() {
     isGameOver = true;
     gameStarted = false;
+    clearDinoFootsteps();
     
     let score = Session.score;
     Session.total_score += score;
@@ -1877,6 +1884,8 @@ function jump() {
         jumpAnimationEndHandler = null;
 
         jumping = false;
+        triggerGroundImpact();
+
         dino.classList.remove('jump');
         if (!gameStarted) return;
 
@@ -1888,7 +1897,7 @@ function jump() {
         }
     };
 
-    dino.addEventListener("animationend", jumpAnimationEndHandler);
+    dino.addEventListener("animationend", jumpAnimationEndHandler, { once: true });
     dino.classList.add('jump');
 }
 
@@ -1913,6 +1922,7 @@ scoreInterval = setInterval(() => {
     
     const prevScore = Session.score;
     Session.score++;
+    const previousCactusAnimationDuration = cactusAnimationDuration;
                  
     // Atualiza a variante do tema baseada no score
     updateThemeVariant(Session.score);
@@ -1963,6 +1973,10 @@ scoreInterval = setInterval(() => {
         cactusIntervalDuration = 1000;
         cactusIntervalDurationRandomness = 1000;
 
+    }
+
+    if (cactusAnimationDuration !== previousCactusAnimationDuration) {
+        scheduleDinoFootsteps();
     }
 }, 1000 * scoreIntervalDuration);
 
