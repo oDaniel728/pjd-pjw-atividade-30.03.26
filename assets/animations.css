@@ -1,0 +1,31 @@
+.an {
+    --duration: 1s;
+}
+
+.an-scroll-x {
+    --start: -100%;
+    --end: 100%;
+    animation: scroll-x var(--duration) linear infinite;
+}
+@keyframes scroll-x {
+    0% {
+        transform: translateX(var(--start));
+    }
+    100% {
+        transform: translateX(var(--end));
+    }
+}
+
+.an-rotate {
+    --start: 0deg;
+    --end: 360deg;
+    animation: rotate var(--duration) linear infinite;
+}
+@keyframes rotate {
+    0% {
+        transform: rotate(var(--start));
+    }
+    100% {
+        transform: rotate(var(--end));
+    }
+}
