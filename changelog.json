@@ -1,5 +1,36 @@
 [
     {
+        "name": "Terremoto!",
+        "description": "Algumas animações + mudanças qualidade de vida",
+        "version": "v1.1.0-26.04.14",
+        "additions": [
+            {
+                "name": "(DINO): Som de passos",
+                "description": "O dinossauro agora toca um som de caminhada durante a corrida, usando o áudio do tema atual em dinoWalk."
+            },
+            {
+                "name": "(DINO): Terremoto no chão",
+                "description": "Ao aterrissar, o chão treme com uma animação curta e dispara o som groundShake do tema atual."
+            }
+        ],
+        "changes": [
+            {
+                "name": "(DINO): Ritmo dos passos sincronizado",
+                "description": "A frequência do som de passo passou a seguir a velocidade de animação do cacto, usando footstepsPerAnimation como base de cálculo."
+            },
+            {
+                "name": "(DINO): Impacto de pouso refinado",
+                "description": "O pouso do dino agora aciona o terremoto visual e sonoro no exato fim do pulo, deixando a aterrissagem mais marcada."
+            }
+        ],
+        "removals": [
+            {
+                "name": "dino herobrine",
+                "description": "Esse troço continua nos arquivos 😭."
+            }
+        ]
+    },
+    {
         "name": "Primeiros Passos",
         "description": "Lançamento inicial do projeto com funcionalidades básicas de jogo, histórico e ranking.",
         "version": "v1.0.0-26.04.13",
