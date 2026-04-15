@@ -12,9 +12,13 @@
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
+
+    --url: "";
+
+    -webkit-mask-image: var(--url);
+    mask-image: var(--url);
 }
 
-.ci-dino {
-    -webkit-mask-image: url("/assets/icons/dinosaur.svg");
-    mask-image: url("/assets/icons/dinosaur.svg");
-}
+.ci-dino { --url: url("/assets/icons/dinosaur.svg"); }
+.ci-cactus { --url: url("/assets/icons/cactus.svg"); }
+.ci-sun { --url: url("/assets/icons/sun.svg"); }
