@@ -11,5 +11,9 @@
     "grass": [ "grass/sound1..4.mp3" ],
     "fire_ext": "fire_ext.mp3",
     "exp": "exp.mp3",
-    "levelup": "levelup.mp3"
+    "levelup": "levelup.mp3",
+    "sand": [ "sand/sound1..4.mp3" ],
+    "fall": [ "fall/sound1..2.mp3" ],
+    "stone": [ "stone/sound1..4.mp3" ],
+    "snow": [ "snow/sound1..4.mp3" ]
 }
