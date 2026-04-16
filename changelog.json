@@ -1,5 +1,22 @@
 [
     {
+        "name": "Profile Tweaks!",
+        "description": "Features focadas em melhorias visuais e de usabilidade no perfil do usuário.",
+        "version": "v1.2.0 p26.04.16",
+        "additions": [
+            {
+                "name": "(Dashboard/Perfil): Seção de Privacidade",
+                "description": "Adicionada uma seção de privacidade no perfil do usuário, permitindo controlar a visibilidade de suas informações no ranking."
+            },
+            {
+                "name": "(Dashboard/Perfil): Seção Perigosa",
+                "description": "Adicionada uma seção de 'perigosidades' no perfil do usuário, onde nele há opções para Resetar dados, ou deletar histórico."
+            }
+        ],
+        "changes": [],
+        "removals": []
+    },
+    {
         "name": "QoL!",
         "description": "Mudanças com foco em mudanças QoL!",
         "version": "v1.1.1 p26.04.15",

@@ -102,6 +102,11 @@
             transform: translateY(-8px);
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
         }
+        .ranking-private-label {
+            font-style: italic;
+            opacity: 0.6;
+            margin-left: 0.35rem;
+        }
     </style>
     <link rel="stylesheet" href="/assets/icons/icons.css">
     <link href="css/style.css" rel="stylesheet">
@@ -341,9 +346,9 @@
                                     <div class="opacity-25">
                                         <i class="ci ci-dino top-0 start-0 position-absolute text-black z-0" style="font-size: 12rem;"></i>
                                         <i class="ci ci-cactus bottom-0 end-0 position-absolute text-black z-0 an an-scroll-x" style="
-                                            --start: -600%; 
+                                            --start: 300%; 
+                                            --end: -600%; 
                                             --duration: 5s; 
-                                            --end: 300%; 
                                             font-size: 5rem;
                                         "></i>
                                         <i class="ci ci-sun top-0 end-0 position-absolute text-black z-0 an an-rotate" style="
@@ -613,6 +618,20 @@
                                     </form>
                                 </div>
                             </div>
+                            <div class="card mt-3 border-info">
+                                <div class="card-header bg-info text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Privacidade</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="switchMostrarRanking">
+                                        <label class="form-check-label" for="switchMostrarRanking">Mostrar no Ranking</label>
+                                    </div>
+                                    <p class="text-muted mb-0 mt-2" id="switchMostrarRankingDescricao">
+                                        Quando ativado, seu nome aparece para todos nos rankings.
+                                    </p>
+                                </div>
+                            </div>
                             <div class="card mt-3 border-warning">
                                 <div class="card-header bg-warning text-dark">
                                     <h5 class="mb-0">Zona de perigo</h5>
@@ -621,9 +640,14 @@
                                     <p class="text-muted mb-3">
                                         Isso vai zerar suas estatísticas, limpar seu histórico e remover seu ranking.
                                     </p>
-                                    <button type="button" class="btn btn-outline-danger" id="btnAbrirResetDados">
-                                        <i class="fas fa-rotate-left me-1"></i> Resetar dados
-                                    </button>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-warning" id="btnAbrirLimparHistorico">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar histórico
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="btnAbrirResetDados">
+                                            <i class="bi bi-trash-fill"></i> Resetar dados
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -734,6 +758,35 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modalLimparHistorico" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Confirmar limpeza do histórico
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        Digite sua senha para limpar apenas o histórico de partidas.
+                    </p>
+                    <form id="formLimparHistorico">
+                        <div class="mb-3">
+                            <label for="senhaLimparHistorico" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="senhaLimparHistorico" required autocomplete="current-password">
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning text-dark">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar agora
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Loading Spinner -->
     <div id="loading" class="spinner-container d-none">
@@ -776,6 +829,7 @@
         let cartaSelecionada = null;
         let bloqueado = false;
         const resetDadosModal = new bootstrap.Modal(document.getElementById('modalResetDados'));
+        const limparHistoricoModal = new bootstrap.Modal(document.getElementById('modalLimparHistorico'));
 
         // ============================================
         // VERIFICAÇÃO DE AUTENTICAÇÃO
@@ -839,6 +893,20 @@
                     document.getElementById('perfilNomeInput').value = dadosUsuario.nome;
                     document.getElementById('perfilPontuacaoMax').textContent = dadosUsuario.max_score || 0;
                     document.getElementById('perfilPartidas').textContent = dadosUsuario.rounds || 0;
+
+                    const switchMostrarRanking = document.getElementById('switchMostrarRanking');
+                    const switchMostrarRankingDescricao = document.getElementById('switchMostrarRankingDescricao');
+                    const mostrarNoRanking = dadosUsuario.mostrar_no_ranking !== false;
+
+                    if (switchMostrarRanking) {
+                        switchMostrarRanking.checked = mostrarNoRanking;
+                    }
+
+                    if (switchMostrarRankingDescricao) {
+                        switchMostrarRankingDescricao.textContent = mostrarNoRanking
+                            ? 'Quando ativado, seu nome aparece para todos nos rankings.'
+                            : 'Você fica oculto para os outros usuários nos rankings.';
+                    }
                     
                     // Avatar no perfil
                     const avatarUrl = dadosUsuario.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(dadosUsuario.nome)}&background=667eea&color=fff`;
@@ -886,13 +954,19 @@
                         total_score: Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0),
                         max_score: Number(item.max_score ?? item.pontuacao_max ?? 0),
                         rounds: Number(item.rounds ?? 0),
-                        nivel: Number(item.nivel ?? (Math.floor(Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0) / 500) + 1))
+                        nivel: Number(item.nivel ?? (Math.floor(Number(item.total_score ?? item.pontuacao_total ?? item.pontuacao ?? 0) / 500) + 1)),
+                        mostrar_no_ranking: item.mostrar_no_ranking !== false
                     }));
 
-                const listaMax = [...listaBase].sort((a, b) => b.max_score - a.max_score);
-                const listaTotal = [...listaBase].sort((a, b) => b.total_score - a.total_score);
-                const listaRounds = [...listaBase].sort((a, b) => b.rounds - a.rounds);
-                const listaNivel = [...listaBase].sort((a, b) => Number(b.nivel ?? 0) - Number(a.nivel ?? 0));
+                const listaVisivel = listaBase.filter((item) => {
+                    if (item.uid === userUid) return true;
+                    return item.mostrar_no_ranking !== false;
+                });
+
+                const listaMax = [...listaVisivel].sort((a, b) => b.max_score - a.max_score);
+                const listaTotal = [...listaVisivel].sort((a, b) => b.total_score - a.total_score);
+                const listaRounds = [...listaVisivel].sort((a, b) => b.rounds - a.rounds);
+                const listaNivel = [...listaVisivel].sort((a, b) => Number(b.nivel ?? 0) - Number(a.nivel ?? 0));
 
                 const medalForPosition = (position) => {
                     if (position === 0) return '🥇';
@@ -965,12 +1039,16 @@
                         const pontuacao = tipo === 'max' ? item.max_score : item.total_score;
                         const rounds = item.rounds ?? 0;
                         const nivel = Number(item.nivel ?? 0);
+                        const nomeBase = item.nome || '-';
+                        const nomeComPrivacidade = (item.uid === userUid && item.mostrar_no_ranking === false)
+                            ? `${nomeBase} <span class="ranking-private-label">(Privado)</span>`
+                            : nomeBase;
 
                         if (tipo === 'rounds') {
                             html += `
                             <tr class="${isCurrentUser}">
                                 <td>${medal}</td>
-                                <td>${item.nome || '-'}</td>
+                                <td>${nomeComPrivacidade}</td>
                                 <td><strong>${rounds}</strong></td>
                                 <td><strong>${item.total_score}</strong></td>
                             </tr>
@@ -982,7 +1060,7 @@
                             html += `
                             <tr class="${isCurrentUser}">
                                 <td>${medal}</td>
-                                <td>${item.nome || '-'}</td>
+                                <td>${nomeComPrivacidade}</td>
                                 <td><strong>${nivel}</strong></td>
                                 <td><strong>${item.total_score}</strong></td>
                             </tr>
@@ -993,7 +1071,7 @@
                         html += `
                             <tr class="${isCurrentUser}">
                                 <td>${medal}</td>
-                                <td>${item.nome || '-'}</td>
+                                <td>${nomeComPrivacidade}</td>
                                 <td><strong>${pontuacao}</strong></td>
                                 <td><strong>${item.rounds}</strong></td>
                             </tr>
@@ -1487,9 +1565,51 @@
             }
         });
 
+        const switchMostrarRanking = document.getElementById('switchMostrarRanking');
+        const switchMostrarRankingDescricao = document.getElementById('switchMostrarRankingDescricao');
+
+        if (switchMostrarRanking) {
+            switchMostrarRanking.addEventListener('change', async (e) => {
+                if (!usuarioAtual || !dadosUsuario) return;
+
+                const mostrarNoRanking = Boolean(e.currentTarget?.checked);
+
+                try {
+                    await update(ref(db, 'usuarios/' + usuarioAtual.uid), {
+                        mostrar_no_ranking: mostrarNoRanking
+                    });
+
+                    const rankingSnapshot = await get(ref(db, 'ranking/' + usuarioAtual.uid));
+                    if (rankingSnapshot.exists()) {
+                        await update(ref(db, 'ranking/' + usuarioAtual.uid), {
+                            mostrar_no_ranking: mostrarNoRanking
+                        });
+                    }
+
+                    dadosUsuario.mostrar_no_ranking = mostrarNoRanking;
+                    if (switchMostrarRankingDescricao) {
+                        switchMostrarRankingDescricao.textContent = mostrarNoRanking
+                            ? 'Quando ativado, seu nome aparece para todos nos rankings.'
+                            : 'Você fica oculto para os outros usuários nos rankings.';
+                    }
+
+                    if (usuarioAtual) {
+                        carregarRanking(usuarioAtual.uid);
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar configuração de privacidade:', error);
+                    alert('Não foi possível salvar a configuração de privacidade. Tente novamente.');
+                    switchMostrarRanking.checked = !mostrarNoRanking;
+                }
+            });
+        }
+
         const btnAbrirResetDados = document.getElementById('btnAbrirResetDados');
         const formResetDados = document.getElementById('formResetDados');
         const senhaResetDados = document.getElementById('senhaResetDados');
+        const btnAbrirLimparHistorico = document.getElementById('btnAbrirLimparHistorico');
+        const formLimparHistorico = document.getElementById('formLimparHistorico');
+        const senhaLimparHistorico = document.getElementById('senhaLimparHistorico');
 
         if (btnAbrirResetDados) {
             btnAbrirResetDados.addEventListener('click', () => {
@@ -1531,6 +1651,7 @@
                         nome: dadosUsuario.nome || currentUser.displayName || 'Usuário',
                         email: dadosUsuario.email || email,
                         avatar: dadosUsuario.avatar || null,
+                        mostrar_no_ranking: dadosUsuario.mostrar_no_ranking !== false,
                         total_score: 0,
                         max_score: 0,
                         rounds: 0,
@@ -1556,6 +1677,57 @@
                     console.error('Erro ao resetar dados:', error);
                     const erroReset = error?.code || error?.message || 'erro_desconhecido';
                     alert(`Não foi possível resetar seus dados. Verifique a senha e tente novamente.\n\nDetalhe: ${erroReset}`);
+                }
+            });
+        }
+
+        if (btnAbrirLimparHistorico) {
+            btnAbrirLimparHistorico.addEventListener('click', () => {
+                if (senhaLimparHistorico) {
+                    senhaLimparHistorico.value = '';
+                }
+
+                limparHistoricoModal.show();
+                setTimeout(() => senhaLimparHistorico?.focus(), 150);
+            });
+        }
+
+        if (formLimparHistorico) {
+            formLimparHistorico.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!usuarioAtual || !dadosUsuario) return;
+
+                const senha = senhaLimparHistorico?.value || '';
+                if (!senha) {
+                    alert('Informe sua senha para continuar.');
+                    return;
+                }
+
+                try {
+                    const email = auth.currentUser?.email || usuarioAtual.email;
+                    if (!email) {
+                        throw new Error('Usuário sem e-mail para validação de senha.');
+                    }
+
+                    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+                    const currentUser = userCredential.user;
+                    if (!currentUser) {
+                        throw new Error('Não foi possível validar o usuário.');
+                    }
+
+                    const uid = currentUser.uid;
+                    await update(ref(db), {
+                        [`historico/${uid}`]: null
+                    });
+
+                    limparHistoricoModal.hide();
+                    alert('Seu histórico foi limpo com sucesso!');
+                    carregarHistorico(uid);
+                } catch (error) {
+                    console.error('Erro ao limpar histórico:', error);
+                    const erroLimpeza = error?.code || error?.message || 'erro_desconhecido';
+                    alert(`Não foi possível limpar seu histórico. Verifique a senha e tente novamente.\n\nDetalhe: ${erroLimpeza}`);
                 }
             });
         }
