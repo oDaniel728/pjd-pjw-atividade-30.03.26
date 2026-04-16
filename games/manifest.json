@@ -1,0 +1,7 @@
+{
+    "dino": {
+        "path": "/games/dino/index.html",
+        "displayName": "Jogo do Dino",
+        "description": "Jogue o clássico jogo do dinossauro do Google Chrome, onde você controla um dinossauro que precisa pular obstáculos para sobreviver o maior tempo possível."
+    }
+}
