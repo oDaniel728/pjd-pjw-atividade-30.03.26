@@ -25,17 +25,17 @@ export interface GameThemeVariants {
 }
 
 export interface GameThemeSkyCloudSounds {
-    cloudSpawn?: string;
-    cloudDespawn?: string;
+    cloudSpawn?: string | null;
+    cloudDespawn?: string | null;
 }
 
 export interface GameThemeSkySunSounds {
-    dayStarted?: string;
-    dayEnded?: string;
-    sunsetStarted?: string;
-    sunsetEnded?: string;
-    nightStarted?: string;
-    nightEnded?: string;
+    dayStarted?: string | null;
+    dayEnded?: string | null;
+    sunsetStarted?: string | null;
+    sunsetEnded?: string | null;
+    nightStarted?: string | null;
+    nightEnded?: string | null;
 }
 
 export interface GameThemeSkySounds {
@@ -45,23 +45,23 @@ export interface GameThemeSkySounds {
 
 export interface GameThemeSounds {
     game?: {
-        scoreHundred?: string;
-        scoreThousand?: string;
-        backgroundMusic?: string;
+        scoreHundred?: string | null;
+        scoreThousand?: string | null;
+        backgroundMusic?: string | null;
     };
     cactus?: {
-        cactusSpawn?: string;
-        cactusDespawn?: string;
+        cactusSpawn?: string | null;
+        cactusDespawn?: string | null;
     };
     dino?: {
-        dinoJump?: string;
-        dinoLand?: string;
-        dinoCrouch?: string;
-        dinoDeath?: string;
-        dinoWalk?: string;
+        dinoJump?: string | null;
+        dinoLand?: string | null;
+        dinoCrouch?: string | null;
+        dinoDeath?: string | null;
+        dinoWalk?: string | null;
     };
     ground?: {
-        groundShake?: string;
+        groundShake?: string | null;
     };
     sky?: GameThemeSkySounds;
 }

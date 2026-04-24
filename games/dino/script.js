@@ -1,9 +1,14 @@
+// @ts-check
+
 /**
  * Firebase e Autenticação
  */
 
+// @ts-ignore
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+// @ts-ignore
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// @ts-ignore
 import { getDatabase, ref, set, update, get, onValue, push, child, remove, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 /** @typedef {import("./types.d.ts").GameThemeTextures} GameThemeTextures */
@@ -17,6 +22,8 @@ import { getDatabase, ref, set, update, get, onValue, push, child, remove, query
 /** @typedef {import("./types.d.ts").GameTheme} GameTheme */
 /** @typedef {import("./types.d.ts").Playlist} Playlist */
 /** @typedef {import("./types.d.ts").PlaylistOptions} PlaylistOptions */
+/** @typedef {"day" | "sunset" | "night"} ThemeVariant */
+/** @typedef {"crab" | "sky" | "neon" | "dark" | "forest" | "default"} ThemeName */
 
 /** @type {Object} Configuração do Firebase */
 const firebaseConfig = {
@@ -75,6 +82,7 @@ function setDatabaseLoadingState(isLoading) {
 
 setDatabaseLoadingState(true);
 
+// @ts-ignore
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "login.html";
@@ -99,6 +107,7 @@ onAuthStateChanged(auth, async (user) => {
 async function saveUserData() {
     if (!usuarioAtual) return;
 
+    // @ts-ignore
     const uid = usuarioAtual.uid;
     const maxHistorico = 50;
 
@@ -108,6 +117,7 @@ async function saveUserData() {
     const nivel = Math.floor(total / 500) + 1;
 
     const data = {
+        // @ts-ignore
         nome: dadosUsuario.nome,
         total_score: total,
         max_score: max,
@@ -350,6 +360,7 @@ const AudioService = {
             console.warn(`Audio track ${name} not found.`);
             return null;
         }
+        // @ts-ignore
         return el;
     },
 
@@ -458,9 +469,11 @@ const AudioService = {
         }
 
         const set = this.activeByTrack.get(trackName);
+        // @ts-ignore
         set.add(audio);
 
         audio.addEventListener("ended", () => {
+            // @ts-ignore
             set.delete(audio);
         });
     },
@@ -479,6 +492,7 @@ const AudioService = {
         let trackName = "";
         if (typeof track === "string") {
             trackName = track;
+            // @ts-ignore
             track = this.getAudioTrack(track);
         } else if (track instanceof HTMLAudioElement) {
             trackName = track.getAttribute("name") || "";
@@ -488,9 +502,11 @@ const AudioService = {
 
         const base = pool[Math.floor(Math.random() * pool.length)];
 
+        // @ts-ignore
         const audio = /** @type {HTMLAudioElement} */ (track.cloneNode());
 
         audio.src = base.src;
+        // @ts-ignore
         audio.volume = track.volume;
         audio.currentTime = 0;
 
@@ -543,7 +559,9 @@ const PlaylistService = {
             loop: options.loop ?? false,
             shuffle: options.shuffle ?? false,
             playing: false,
+            // @ts-ignore
             track: options.track ?? null,
+            // @ts-ignore
             current: null
         });
         return name;
@@ -558,6 +576,7 @@ const PlaylistService = {
         if (!pl) return;
 
         if (typeof pl.track === "string") {
+            // @ts-ignore
             pl.track = AudioService.getAudioTrack(pl.track);
         }
 
@@ -630,10 +649,13 @@ const PlaylistService = {
         if (!pool || pool.length === 0) return;
 
         const base = pool[Math.floor(Math.random() * pool.length)];
+        // @ts-ignore
         const audio = /** @type {HTMLAudioElement} */ (pl.track.cloneNode());
+        // @ts-ignore
         const trackName = pl.track.getAttribute("name") || "";
 
         audio.src = base.src;
+        // @ts-ignore
         audio.volume = pl.track.volume;
         audio.currentTime = 0;
 
@@ -710,6 +732,7 @@ const Config = {
      */
     get(name, fallback = null) {
         return Object.hasOwn(this.data, name)
+            // @ts-ignore
             ? this.data[name]
             : fallback;
     },
@@ -720,6 +743,7 @@ const Config = {
      * @param {*} value - Valor a armazenar
      */
     set(name, value) {
+        // @ts-ignore
         this.data[name] = value;
         this.save();
     },
@@ -731,6 +755,7 @@ const Config = {
      */
     setDefault(name, value) {
         if (!Object.hasOwn(this.data, name)) {
+            // @ts-ignore
             this.data[name] = value;
             this.save();
         }
@@ -823,6 +848,7 @@ const nuvem = document.querySelector(".nuvem");
 const board = document.getElementById('game-board');
 const scoreElement = document.querySelectorAll('.score-show');
 const maxScoreElement = document.getElementById('max-score');
+// @ts-ignore
 const startMsg = document.getElementById('start-msg');
 const gameOverMsg = document.querySelector('#game-over-msg');
 const gameOverMsgScoreShower = document.querySelector(".score-show-gameover");
@@ -890,6 +916,7 @@ const defaultDinoJumpAnimationDuration = getCSSVariable("dino-jump-animation-dur
  * Converte a duração CSS do pulo para milissegundos
  * @returns {number} Duração em ms
  */
+// @ts-ignore
 function getDinoJumpAnimationDurationMs() {
     const duration = getCSSVariable("dino-jump-animation-duration") || defaultDinoJumpAnimationDuration;
     const parsed = Number.parseFloat(duration);
@@ -937,6 +964,7 @@ function scheduleDinoFootsteps() {
         }
 
         if (!jumping && !crouching && dinoWalkSoundEffect) {
+            // @ts-ignore
             AudioService.playAudio(dinoWalkSoundEffect, sfxTrack);
             dinoFootstepTimeout = setTimeout(tick, getDinoFootstepIntervalMs());
             return;
@@ -960,6 +988,7 @@ function startCrouch() {
     setDinoJumpAnimationDuration("0.2s");
 
     if (dinoCrouchSoundEffect) {
+        // @ts-ignore
         AudioService.playAudio(dinoCrouchSoundEffect, sfxTrack);
     }
 }
@@ -980,10 +1009,12 @@ function triggerGroundImpact() {
 
     const groundShakeSound = ThemeSystem.getCurrentThemeSound(["ground", "groundShake"]);
     if (groundShakeSound) {
+        // @ts-ignore
         AudioService.playAudio(groundShakeSound, sfxTrack);
     }
 
     chao.classList.remove("u-vibrate");
+    // @ts-ignore
     void chao.offsetWidth;
     chao.classList.add("u-vibrate");
 
@@ -1106,9 +1137,11 @@ bindConfigElements();
 let isGameOver = false;
 
 /** @type {number|null} ID do intervalo de pontuação */
+// @ts-ignore
 let scoreInterval;
 
 /** @type {number|null} ID do intervalo de colisão */
+// @ts-ignore
 let checkCollisionInterval;
 
 /** @type {boolean} Indica se o dinossauro está pulando */
@@ -1124,6 +1157,7 @@ let gameStarted = false;
 let musicPlaying = false;
 
 /** @type {number|null} ID do timeout dos cactos */
+// @ts-ignore
 let cactusTimeout;
 
 /** @type {number} Duração da animação dos cactos */
@@ -1139,6 +1173,7 @@ let cactusIntervalDuration = 2000;
 let cactusIntervalDurationRandomness = 500;
 
 /** @type {number|null} ID do timeout das nuvens */
+// @ts-ignore
 let cloudTimeout;
 
 /** @type {number} Duração da animação das nuvens */
@@ -1163,6 +1198,7 @@ let cloudScaleRandomness = 1;
 let dinoRotation = 0;
 
 /** @type {(event: AnimationEvent) => void | null} Handler ativo do fim do pulo */
+// @ts-ignore
 let jumpAnimationEndHandler = null;
 
 /** @type {number} Recorde no início da rodada */
@@ -1183,7 +1219,7 @@ let dinoTexture = "🦖";
 /** @type {string} Textura da nuvem */
 let cloudTexture = "☁️";
 
-/** @type {string} Efeito sonoro para spawn de cactos */
+/** @type {string|null} Efeito sonoro para spawn de cactos */
 let cactusSpawnSoundEffect = "cactus";
 
 /** @type {string|null} Efeito sonoro para spawn de nuvens */
@@ -1217,18 +1253,23 @@ let currentThemeBackgroundMusic = "bg-song";
 let activeThemeForBgm = null;
 
 /** @type {string} Cor padrão de fundo 1 */
+// @ts-ignore
 const defaultBackgroundColor1 = getCSSVariable("background-color1");
 
 /** @type {string} Cor padrão de fundo 2 */
+// @ts-ignore
 const defaultBackgroundColor2 = getCSSVariable("background-color2");
 
 /** @type {string} Cor padrão do chão 1 */
+// @ts-ignore
 const defaultGroundColor1 = getCSSVariable("ground-color1");
 
 /** @type {string} Cor padrão do chão 2 */
+// @ts-ignore
 const defaultGroundColor2 = getCSSVariable("ground-color2");
 
 /** @type {string} Cor padrão do chão 3 */
+// @ts-ignore
 const defaultGroundColor3 = getCSSVariable("ground-color3");
 
 /** @type {number} Passos por animação do cacto */
@@ -1303,6 +1344,7 @@ document.addEventListener("keyup", (event) => {
     stopCrouch();
 });
 
+// @ts-ignore
 board.addEventListener('pointerdown', () => {
     if (isDatabaseLoading) return;
     handleAction(false);
@@ -1374,15 +1416,37 @@ const ThemeSystem = {
     /** @type {number} Índice do tema atual */
     currentThemeIndex: -1,
     
-    /** @type {string} Variante atual (day, sunset, night) */
+    /** @type {ThemeVariant} Variante atual (day, sunset, night) */
     currentVariant: "day",
 
-    /** @type {string|null} Variante alvo durante transição */
+    /** @type {ThemeVariant|null} Variante alvo durante transição */
     transitionTarget: null,
 
-    /** @type {GameTheme[]} Lista de temas disponíveis */
-    themes: [
-        {
+    /** Lista de temas disponíveis */
+    themes: {
+        crab: {
+            name: "crab",
+            textures: { cactus: "🍲", dino: "🦀", cloud: "🫧" },
+            sun: { day: "☀️", sunset: "", night: "🌙" },
+            variants: {
+                day: {
+                    bg1: "#87CEEB", bg2: "#42afc9",
+                    gr1: "#fffbad", gr2: "#ffea71",
+                    gr3: "#ffc446"
+                },
+                sunset: {
+                    bg1: "#ff9e80", bg2: "#ff6e40",
+                    gr1: "#ffd180", gr2: "#ffab40",
+                    gr3: "#ff9100"
+                },
+                night: {
+                    bg1: "#0d47a1", bg2: "#002171",
+                    gr1: "#4fc3f7", gr2: "#0288d1",
+                    gr3: "#01579b"
+                }
+            }
+        },
+        sky: {
             name: "sky",
             textures: { cactus: "🦖", dino: "🌵", cloud: "☀️" },
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
@@ -1392,7 +1456,7 @@ const ThemeSystem = {
                 night: { bg1: "#1a1a2e", bg2: "#16213e", gr1: "#4a5568", gr2: "#2d3748", gr3: "#1a202c" }
             }
         },
-        {
+        neon: {
             name: "neon",
             textures: { cactus: "🔺", dino: "🟨", cloud: "⬜◽" },
             sun: { day: " ", sunset: " ", night: " " },
@@ -1402,7 +1466,7 @@ const ThemeSystem = {
                 night: { bg1: "#0a0e27", bg2: "#16213e", gr1: "#5a189a", gr2: "#3c096c", gr3: "#240046" }
             }
         },
-        {
+        dark: {
             name: "dark",
             textures: { cactus: "🔥", dino: "💧", cloud: "☁️" },
             sounds: {
@@ -1418,7 +1482,7 @@ const ThemeSystem = {
                 night: { bg1: "#000000", bg2: "#0a0a0a", gr1: "#555555", gr2: "#222222", gr3: "#050505" }
             }
         },
-        {
+        forest: {
             name: "forest",
             textures: { cactus: "🌳", dino: "🦕", cloud: "🌧️" },
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
@@ -1434,7 +1498,7 @@ const ThemeSystem = {
                 night: { bg1: "#0d1b0f", bg2: "#1a2e1b", gr1: "#001a00", gr2: "#000d00", gr3: "#000400" }
             }
         },
-        {
+        default: {
             name: "default",
             textures: { cactus: "🌵", dino: "🦖", cloud: "☁️" },
             sun: { day: "☀️", sunset: "⛅", night: "🌙" },
@@ -1481,25 +1545,38 @@ const ThemeSystem = {
                 night: { bg1: "#1a1a2e", bg2: "#0f3460", gr1: "#8B7355", gr2: "#5D3E3E", gr3: "#2d1810" }
             }
         }
-    ],
+    },
+
+    /** @type {ThemeName[]} Ordem dos temas no sorteio por índice */
+    themeOrder: ["crab", "sky", "neon", "dark", "forest", "default"],
 
     /**
-     * Seleciona um tema por índice
-     * @param {number} themeIndex - Índice do tema
+     * Seleciona tema por índice ou nome
+     * @param {number | ThemeName} themeRef - Índice na ordem dos temas ou nome do tema
      */
-    selectTheme(themeIndex) {
-        this.currentThemeIndex = themeIndex;
+    selectTheme(themeRef) {
+        let index = 0;
+
+        if (typeof themeRef === "number") {
+            index = Math.max(0, Math.min(themeRef, this.themeOrder.length - 1));
+        } else {
+            const foundIndex = this.themeOrder.indexOf(themeRef);
+            index = foundIndex >= 0 ? foundIndex : this.themeOrder.indexOf("default");
+        }
+
+        this.currentThemeIndex = index;
         this.applyVariant("day");
+        updateThemeSun();
     },
 
     /**
      * Aplica variante do tema atual
-     * @param {string} variant - Variante (day, sunset, night)
+     * @param {ThemeVariant} variant - Variante (day, sunset, night)
      */
     applyVariant(variant) {
-        if (this.currentThemeIndex < 0 || !this.themes[this.currentThemeIndex]) return;
+        const theme = this.getCurrentTheme();
+        if (!theme) return;
 
-        const theme = this.themes[this.currentThemeIndex];
         const colors = theme.variants[variant];
 
         if (!colors) return;
@@ -1516,7 +1593,7 @@ const ThemeSystem = {
     /**
      * Obtém variante apropriada para a pontuação
      * @param {number} score - Pontuação atual
-     * @returns {string} Variante (day, sunset, night)
+    * @returns {ThemeVariant} Variante (day, sunset, night)
      */
     getVariantForScore(score) {
         const pointsPerTurn = getPointsPerTurn();
@@ -1533,7 +1610,9 @@ const ThemeSystem = {
      * @returns {GameTheme} Tema atual
      */
     getCurrentTheme() {
-        return this.themes[this.currentThemeIndex] || this.themes[0];
+        const themeName = this.themeOrder[this.currentThemeIndex];
+        if (!themeName) return this.getDefaultTheme();
+        return this.themes[themeName] || this.getDefaultTheme();
     },
 
     /**
@@ -1541,7 +1620,17 @@ const ThemeSystem = {
      * @returns {GameTheme} Tema padrão
      */
     getDefaultTheme() {
-        return this.themes.find((theme) => theme.name === "default") || this.themes[0];
+        return this.themes.default || this.themes[this.themeOrder[0]];
+    },
+
+    /**
+     * Obtém temas pelo nome
+     * @param {ThemeName} name - Nome do tema
+     * @returns {GameTheme} Lista de temas encontrados
+     */
+    getThemeFromName(name) {
+        const theme = this.themes[name];
+        return theme ?? this.getDefaultTheme();
     },
 
     /**
@@ -1555,9 +1644,11 @@ const ThemeSystem = {
 
         for (const key of path) {
             if (!value || typeof value !== "object") return undefined;
+            // @ts-ignore
             value = value[key];
         }
 
+        // @ts-ignore
         return value;
     },
 
@@ -1578,7 +1669,7 @@ const ThemeSystem = {
 
     /**
      * Obtém texturas do tema atual
-     * @returns {Object} Texturas (cacto, dino, nuvem)
+     * @returns {GameThemeTextures} Texturas (cacto, dino, nuvem)
      */
     getCurrentTextures() {
         return this.getCurrentTheme().textures;
@@ -1592,21 +1683,23 @@ const ThemeSystem = {
         const theme = this.getCurrentTheme();
         if (!theme.sun) return "☀️";
         return theme.sun[this.currentVariant] || "☀️";
-    }
+    },
 };
 
 /**
  * Anima transição suave de cores entre variantes
- * @param {string} fromVariant - Variante atual
- * @param {string} toVariant - Variante destino
+ * @param {ThemeVariant} fromVariant - Variante atual
+ * @param {ThemeVariant} toVariant - Variante destino
  * @param {number} duration - Duração da transição em ms
  */
 function animateThemeTransition(fromVariant, toVariant, duration = 5000) {
     if (ThemeSystem.currentThemeIndex < 0) return;
     if (ThemeSystem.transitionTarget === toVariant) return;
 
-    const theme = ThemeSystem.themes[ThemeSystem.currentThemeIndex];
+    const theme = ThemeSystem.getCurrentTheme();
+    /** @type {GameThemeVariantColors} */
     const fromColors = theme.variants[fromVariant];
+    /** @type {GameThemeVariantColors} */
     const toColors = theme.variants[toVariant];
 
     if (!fromColors || !toColors) return;
@@ -1628,6 +1721,7 @@ function animateThemeTransition(fromVariant, toVariant, duration = 5000) {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
+        // @ts-ignore
         const interpolateColor = (from, to, t) => {
             const fromRgb = parseInt(from.slice(1), 16);
             const toRgb = parseInt(to.slice(1), 16);
@@ -1693,7 +1787,7 @@ function updateThemeSun() {
  */
 function processTextures() {
     const c = Math.random() * 100;
-    
+    /** @type {number} */
     let themeIndex;
     // Default reset
     cactusTexture = "🌵";
@@ -1701,15 +1795,17 @@ function processTextures() {
     cloudTexture = "☁️";
 
     if (c < 5) {
-        themeIndex = 0; // sky
+        themeIndex = 1; // sky
     } else if (c < 10) {
-        themeIndex = 1; // neon
+        themeIndex = 0; // crab
     } else if (c < 15) {
-        themeIndex = 2; // dark
-    } else if (c < 35) {
-        themeIndex = 3; // forest
+        themeIndex = 2; // neon
+    } else if (c < 20) {
+        themeIndex = 3; // dark
+    } else if (c < 40) {
+        themeIndex = 4; // forest
     } else {
-        themeIndex = 4; // default
+        themeIndex = 5; // default
     }
 
     // Seleciona o tema e aplica (começa com "day")
@@ -1736,7 +1832,9 @@ function processTextures() {
 
     playThemeBackgroundMusic();
 
+    // @ts-ignore
     dino.innerText = dinoTexture;
+    // @ts-ignore
     nuvem.innerText = cloudTexture;
 }
 
@@ -1753,6 +1851,7 @@ function startGame() {
     Session.rounds++;
     maxScoreAtGameStart = Session.max_score;
     dinoRotation = 0;
+    // @ts-ignore
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
     stopCrouch();
     scheduleDinoFootsteps();
@@ -1768,6 +1867,7 @@ function startGame() {
     solElement = document.createElement('div');
     solElement.classList.add('sol');
     solElement.innerText = ThemeSystem.getCurrentSun();
+    // @ts-ignore
     board.appendChild(solElement);
     
     document
@@ -1787,6 +1887,7 @@ function startGame() {
 function restartGame() {
     startGame();
     isGameOver = false;
+    // @ts-ignore
     gameOverMsg.classList.add("transparent");
 }
 
@@ -1798,6 +1899,7 @@ function restartGame() {
  * Handler de ação do jogador (pular ou iniciar jogo)
  * @param {boolean} spacePressed - Se foi acionado por teclado
  */
+// @ts-ignore
 function handleAction(spacePressed) {
     if (isDatabaseLoading) return;
 
@@ -1823,9 +1925,11 @@ function handleGameOver() {
     let score = Session.score;
     Session.total_score += score;
     if (score !== 0) {
+        // @ts-ignore
         gameOverMsgScoreShower.innerText = score.toString().padStart(5, '0');
     }
     if (gameOverPhrase) {
+        // @ts-ignore
         gameOverPhrase.innerText = getRandomGameOverPhrase();
     }
 
@@ -1849,8 +1953,11 @@ function handleGameOver() {
     if (solElement) {
         solElement.classList.add("paused");
     }
+    // @ts-ignore
     dino.classList.add("paused");
+    // @ts-ignore
     AudioService.playAudio(dinoDeathSoundEffect, sfxTrack);
+    // @ts-ignore
     gameOverMsg.classList.remove('transparent');
 }
 
@@ -1865,39 +1972,51 @@ function jump() {
     if (jumping) return;
     jumping = true;
 
+    // @ts-ignore
     AudioService.playAudio(dinoJumpSoundEffect, sfxTrack);
 
+    // @ts-ignore
     dino.style.setProperty("--rotation", `${dinoRotation}deg`);
 
+    // @ts-ignore
     dino.classList.remove('jump');
 
+    // @ts-ignore
     void dino.offsetWidth;
 
     if (jumpAnimationEndHandler) {
+        // @ts-ignore
         dino.removeEventListener("animationend", jumpAnimationEndHandler);
     }
 
     jumpAnimationEndHandler = (event) => {
         if (event.animationName !== "pular") return;
 
+        // @ts-ignore
         dino.removeEventListener("animationend", jumpAnimationEndHandler);
+        // @ts-ignore
         jumpAnimationEndHandler = null;
 
         jumping = false;
         triggerGroundImpact();
 
+        // @ts-ignore
         dino.classList.remove('jump');
         if (!gameStarted) return;
 
         dinoRotation += 180;
+        // @ts-ignore
         dino.style.setProperty("--rotation", `${dinoRotation}deg`);
 
         if (dinoLandSoundEffect) {
+            // @ts-ignore
             AudioService.playAudio(dinoLandSoundEffect, sfxTrack);
         }
     };
 
+    // @ts-ignore
     dino.addEventListener("animationend", jumpAnimationEndHandler, { once: true });
+    // @ts-ignore
     dino.classList.add('jump');
 }
 
@@ -1914,12 +2033,15 @@ checkCollisionInterval = setInterval(() => {
  */
 scoreInterval = setInterval(() => {
     scoreElement.forEach((el) => {
+        // @ts-ignore
         el.innerText = Session.score.toString().padStart(5, '0');
     })
+    // @ts-ignore
     maxScoreElement.innerText = Session.max_score.toString().padStart(5, '0');
     
     if (!gameStarted || isGameOver) return;
     
+    // @ts-ignore
     const prevScore = Session.score;
     Session.score++;
     const previousCactusAnimationDuration = cactusAnimationDuration;
@@ -1928,22 +2050,29 @@ scoreInterval = setInterval(() => {
     updateThemeVariant(Session.score);
     
     if (getBooleanConfig("scoreSounds") && Session.score % 100 === 0) {
+        // @ts-ignore
         AudioService.playAudio(scoreHundredSoundEffect, scoTrack);
     }
 
     if (getBooleanConfig("scoreSounds") && Session.score % 1000 === 0) {
+        // @ts-ignore
         AudioService.playAudio(scoreThousandSoundEffect, scoTrack);
     }
     
     if (Session.score > Session.max_score) {
         Session.max_score = Session.score;
     
+        // @ts-ignore
         if (!maxScoreElement.classList.contains("max-score-gain")) {
+            // @ts-ignore
             maxScoreElement.classList.add("max-score-gain");
         }
     } else {
+        // @ts-ignore
         if (maxScoreElement.classList.contains("max-score-gain")) {
+            // @ts-ignore
             maxScoreElement.classList.remove("max-score-gain");
+            // @ts-ignore
             void maxScoreElement.offsetWidth;
         }
     }
@@ -1993,8 +2122,10 @@ function spawnCactus() {
         changeCSSVariable("cactus-move-duration", cactusMoveDuration, cactus);
 
         // AudioService.playAudio("cactus", sfxTrack);
+        // @ts-ignore
         AudioService.playAudio(cactusSpawnSoundEffect, sfxTrack);
 
+        // @ts-ignore
         board.appendChild(cactus);
         setTimeout(() => {
             if (!gameStarted) return;
@@ -2014,12 +2145,14 @@ function spawnCloud() {
         
         const scale = Math.random() * cloudScaleRandomness + cloudScale;
         cloud.style.transform = `scale(${scale})`;
+        // @ts-ignore
         cloud.style.opacity = scale;
         
         cloud.classList.add("nuvem");
         cloud.innerText = cloudTexture;
 
         if (cloudSpawnSoundEffect) {
+            // @ts-ignore
             AudioService.playAudio(cloudSpawnSoundEffect, sfxTrack);
         }
 
@@ -2029,6 +2162,7 @@ function spawnCloud() {
 
         cloud.style.animationDuration = `${cloudAnimationDuration + (Math.random() * cloudAnimationDurationRandomness)}s`;
 
+        // @ts-ignore
         board.appendChild(cloud);
 
         // remover depois de um tempo
@@ -2051,6 +2185,7 @@ function spawnCloud() {
  */
 function checkCollision() {
     if (!gameStarted) return;
+    // @ts-ignore
     const dinoRect = dino.getBoundingClientRect();
     const cactuses = document.querySelectorAll('.cacto');
 
@@ -2073,3 +2208,5 @@ function checkCollision() {
         }
     });
 }
+
+
