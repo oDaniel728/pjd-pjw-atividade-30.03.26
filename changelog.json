@@ -1,5 +1,27 @@
 [
     {
+        "name": "Jogo da Forca",
+        "description": "Adição de um novo jogo clássico, o Jogo da Forca, com uma interface simples e intuitiva, onde os jogadores podem adivinhar palavras antes que o personagem seja 'enforcado'.",
+        "version": "v1.3.0 p26.04.24",
+        "additions": [
+            {
+                "name": "Jogo da Forca",
+                "description": "Novo jogo adicionado ao projeto, com mecânicas tradicionais de adivinhação de palavras e uma interface amigável.(PC Only!)"
+            }
+        ],
+        "changes": [
+            {
+                "name": "Nome da plataforma",
+                "description": "O nome antes \"POC: Pule os Cactos\" agora contém \"AGH: Game Hub\"."
+            },
+            {
+                "name": "Menu Centralizado",
+                "description": "Em todas as abas relacionadas aos dados de um jogo, agora há abas relacionadas a qualquer jogo na plataforma, para facilitar a navegação entre os jogos e seus dados."
+            }
+        ],
+        "removals": []
+    },
+    {
         "name": "Profile Tweaks!",
         "description": "Features focadas em melhorias visuais e de usabilidade no perfil do usuário.",
         "version": "v1.2.0 p26.04.16",

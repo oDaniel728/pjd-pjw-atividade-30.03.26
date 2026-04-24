@@ -3,5 +3,10 @@
         "path": "/games/dino/index.html",
         "displayName": "Jogo do Dino",
         "description": "Jogue o clássico jogo do dinossauro do Google Chrome, onde você controla um dinossauro que precisa pular obstáculos para sobreviver o maior tempo possível."
+    },
+    "jogo_da_forca": {
+        "path": "/games/jogo_da_forca/index.html",
+        "displayName": "Jogo da Forca",
+        "description": "Teste seu vocabulário e habilidades de adivinhação com o clássico jogo da forca. Tente adivinhar a palavra secreta antes que o boneco seja completamente enforcado!"
     }
 }

@@ -107,6 +107,82 @@
             opacity: 0.6;
             margin-left: 0.35rem;
         }
+        .ranking-rounds-col.hidden-forca {
+            display: none !important;
+        }
+        #statsGameTabs,
+        #rankingGameTabs,
+        #historicoGameTabs {
+            gap: 0.75rem;
+        }
+        #perfilGameTabs {
+            gap: 0.4rem;
+            opacity: 0.9;
+        }
+        #perfilGameTabs .nav-link {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.55rem;
+        }
+        button[data-stats-game="dino"],
+        button[data-ranking-game="dino"],
+        button[data-historico-game="dino"],
+        button[data-perfil-game="dino"] {
+            background-color: transparent !important;
+            color: var(--ifam-green) !important;
+            border: 1px solid var(--ifam-green) !important;
+            box-shadow: none !important;
+        }
+        button[data-stats-game="jogo_da_forca"],
+        button[data-ranking-game="jogo_da_forca"],
+        button[data-historico-game="jogo_da_forca"],
+        button[data-perfil-game="jogo_da_forca"] {
+            background-color: transparent !important;
+            color: #dc3545 !important;
+            border: 1px solid #dc3545 !important;
+            box-shadow: none !important;
+        }
+        button[data-stats-game="dino"].active,
+        button[data-ranking-game="dino"].active,
+        button[data-historico-game="dino"].active,
+        button[data-stats-game="dino"]:focus,
+        button[data-ranking-game="dino"]:focus,
+        button[data-historico-game="dino"]:focus,
+        button[data-stats-game="dino"]:focus-visible,
+        button[data-ranking-game="dino"]:focus-visible,
+        button[data-historico-game="dino"]:focus-visible,
+        button[data-perfil-game="dino"]:focus-visible,
+        button[data-stats-game="dino"]:hover,
+        button[data-ranking-game="dino"]:hover,
+        button[data-historico-game="dino"]:hover,
+        button[data-perfil-game="dino"]:hover,
+        button[data-perfil-game="dino"].active,
+        button[data-perfil-game="dino"]:focus {
+            background-color: var(--ifam-green) !important;
+            color: #fff !important;
+            border-color: var(--ifam-green) !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 128, 55, 0.25) !important;
+        }
+        button[data-stats-game="jogo_da_forca"].active,
+        button[data-ranking-game="jogo_da_forca"].active,
+        button[data-historico-game="jogo_da_forca"].active,
+        button[data-stats-game="jogo_da_forca"]:focus,
+        button[data-ranking-game="jogo_da_forca"]:focus,
+        button[data-historico-game="jogo_da_forca"]:focus,
+        button[data-stats-game="jogo_da_forca"]:focus-visible,
+        button[data-ranking-game="jogo_da_forca"]:focus-visible,
+        button[data-historico-game="jogo_da_forca"]:focus-visible,
+        button[data-perfil-game="jogo_da_forca"]:focus-visible,
+        button[data-stats-game="jogo_da_forca"]:hover,
+        button[data-ranking-game="jogo_da_forca"]:hover,
+        button[data-historico-game="jogo_da_forca"]:hover,
+        button[data-perfil-game="jogo_da_forca"]:hover,
+        button[data-perfil-game="jogo_da_forca"].active,
+        button[data-perfil-game="jogo_da_forca"]:focus {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
     </style>
     <link rel="stylesheet" href="/assets/icons/icons.css">
     <link href="css/style.css" rel="stylesheet">
@@ -118,7 +194,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-ifam">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-gamepad"></i> POC: Pule os Cactos
+                <i class="fas fa-gamepad"></i> AGH: Game Hub
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" id="btnMobileMenu">
@@ -202,8 +278,24 @@
                     </div>
 
                     <!-- Cards de Estatísticas -->
-                    <div class="row mb-4 g-2">
-                        <div class="col-md-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <ul class="nav nav-pills" id="statsGameTabs" role="tablist" aria-label="Selecionar jogo das estatísticas">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="stats-tab-dino" type="button" role="tab" aria-selected="true" data-stats-game="dino">
+                                    <i class="ci ci-dino me-1"></i>Dino
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="stats-tab-forca" type="button" role="tab" aria-selected="false" data-stats-game="jogo_da_forca">
+                                    <i class="bi bi-heart-fill me-1"></i>Forca
+                                </button>
+                            </li>
+                        </ul>
+                        <small class="text-muted" id="statsGameHint">Exibindo estatísticas do Dino</small>
+                    </div>
+
+                    <div class="row mb-4 g-2" id="statsCardsRow">
+                        <div class="col-md-3" id="statsCardTotalCol">
                             <div class="card stat-card bg-primary text-white float-hover-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -220,7 +312,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3" id="statsCardMaxCol">
                             <div class="card stat-card bg-danger text-white float-hover-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -237,7 +329,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3" id="statsCardNivelCol">
                             <div class="card stat-card bg-success text-white float-hover-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -254,7 +346,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3" id="statsCardRoundsCol">
                             <div class="card stat-card bg-info text-dark float-hover-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -340,6 +432,29 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-6 col-xl-4 col-sm-12">
                             <div class="card stat-card bg-dark text-white h-100">
+                                <div class="game-card card-body d-flex flex-column justify-content-between overflow-hidden position-relative" data-game="jogo_da_forca">
+                                    <!-- animações -->
+                                    <div class="opacity-25">
+                                        <i class="bi bi-heart-fill position-absolute top-0 end-0 text-black z-0 an an-heartbeat" style="
+                                            --duration: 1s;
+                                            font-size: 10rem;   
+                                        "></i>
+                                    </div>
+                                    <div class="z-1">
+                                        <h5 class="card-title mb-2 game-name"></h5>
+                                        <p class="card-text mb-0 game-description"></p>
+                                    </div>
+    
+                                    <div class="mt-4 z-1">
+                                        <button class="btn btn-success text-light fw-semibold game-redirect" type="button">
+                                            Jogar agora
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4 col-sm-12">
+                            <div class="card stat-card bg-dark text-white h-100">
                                 <!-- Card Jogo do Dino -->
                                 <div class="game-card card-body d-flex flex-column justify-content-between overflow-hidden position-relative" data-game="dino">
                                     <!-- animações -->
@@ -358,9 +473,7 @@
                                     </div>
                                     <div class="z-1">
                                         <h5 class="card-title mb-2 game-name"></h5>
-                                        <p class="card-text mb-0 game-description">
-                                            Abra o clássico desafio do dinossauro e tente bater sua melhor pontuação.
-                                        </p>
+                                        <p class="card-text mb-0 game-description"></p>
                                     </div>
 
                                     <div class="mt-4 z-1">
@@ -370,6 +483,7 @@
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </section>
@@ -398,8 +512,24 @@
                         </button>
                     </div>
 
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <ul class="nav nav-pills" id="rankingGameTabs" role="tablist" aria-label="Selecionar jogo do ranking">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="ranking-tab-dino" type="button" role="tab" aria-selected="true" data-ranking-game="dino">
+                                    <i class="ci ci-dino me-1"></i>Dino
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="ranking-tab-forca" type="button" role="tab" aria-selected="false" data-ranking-game="jogo_da_forca">
+                                    <i class="bi bi-heart-fill me-1"></i>Forca
+                                </button>
+                            </li>
+                        </ul>
+                        <small class="text-muted" id="rankingGameHint">Exibindo ranking do Dino</small>
+                    </div>
+
                     <div class="row g-3">
-                        <div class="col-12 col-xl-6">
+                        <div class="col-12 col-xl-6" id="rankingCardMaxCol">
                             <div class="card h-100">
                                 <div class="card-header bg-danger text-white">
                                     <h5 class="mb-0">
@@ -414,7 +544,7 @@
                                                     <th>Posição</th>
                                                     <th>Jogador</th>
                                                     <th>Pontuação Máxima</th>
-                                                    <th>Rounds</th>
+                                                    <th class="ranking-rounds-col">Rounds</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="rankingMaxBody">
@@ -432,7 +562,7 @@
                             </div>
                         </div>
 
-                        <div class="col-12 col-xl-6">
+                        <div class="col-12 col-xl-6" id="rankingCardTotalCol">
                             <div class="card h-100">
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0">
@@ -447,7 +577,7 @@
                                                     <th>Posição</th>
                                                     <th>Jogador</th>
                                                     <th>Pontuação Total</th>
-                                                    <th>Rounds</th>
+                                                    <th class="ranking-rounds-col">Rounds</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="rankingTotalBody">
@@ -465,7 +595,7 @@
                             </div>
                         </div>
 
-                        <div class="col-12 col-xl-6">
+                        <div class="col-12 col-xl-6" id="rankingCardRoundsCol">
                             <div class="card h-100">
                                 <div class="card-header bg-info text-dark">
                                     <h5 class="mb-0">
@@ -498,7 +628,7 @@
                             </div>
                         </div>
 
-                        <div class="col-12 col-xl-6">
+                        <div class="col-12 col-xl-6" id="rankingCardNivelCol">
                             <div class="card h-100">
                                 <div class="card-header bg-success text-white">
                                     <h5 class="mb-0">
@@ -582,7 +712,21 @@
                         <div class="col-md-8">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">Estatísticas</h5>
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <h5 class="mb-0">Estatísticas</h5>
+                                        <ul class="nav nav-pills" id="perfilGameTabs" role="tablist" aria-label="Selecionar jogo das estatísticas do perfil">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="perfil-tab-dino" type="button" role="tab" aria-selected="true" data-perfil-game="dino">
+                                                    Dino
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="perfil-tab-forca" type="button" role="tab" aria-selected="false" data-perfil-game="jogo_da_forca">
+                                                    Forca
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="row text-center">
@@ -663,6 +807,22 @@
                         <button class="btn btn-outline-primary" id="btnAtualizarHistorico">
                             <i class="fas fa-sync-alt me-1"></i> Atualizar
                         </button>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <ul class="nav nav-pills" id="historicoGameTabs" role="tablist" aria-label="Selecionar jogo do histórico">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="historico-tab-dino" type="button" role="tab" aria-selected="true" data-historico-game="dino">
+                                    <i class="ci ci-dino me-1"></i>Dino
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="historico-tab-forca" type="button" role="tab" aria-selected="false" data-historico-game="jogo_da_forca">
+                                    <i class="bi bi-heart-fill me-1"></i>Forca
+                                </button>
+                            </li>
+                        </ul>
+                        <small class="text-muted" id="historicoGameHint">Exibindo histórico do Dino</small>
                     </div>
 
                     <div class="card">
@@ -800,7 +960,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, update, get, onValue, push, child, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, update, get, onValue, off, push, child, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // ============================================
         // CONFIGURAÇÃO DO FIREBASE - SUBSTITUA OS VALORES
@@ -828,8 +988,283 @@
         let paresEncontrados = 0;
         let cartaSelecionada = null;
         let bloqueado = false;
+        const defaultStats = { total_score: 0, max_score: 0, rounds: 0, nivel: 1 };
+        const gameStatsCache = {
+            dino: { ...defaultStats },
+            jogo_da_forca: { ...defaultStats }
+        };
+        let activeGame = 'dino';
+        let currentRankingRef = null;
+        let currentRankingListener = null;
         const resetDadosModal = new bootstrap.Modal(document.getElementById('modalResetDados'));
         const limparHistoricoModal = new bootstrap.Modal(document.getElementById('modalLimparHistorico'));
+
+        function normalizeStatsData(data) {
+            if (!data || typeof data !== 'object') {
+                return { ...defaultStats };
+            }
+
+            const total = Number(data.total_score ?? data.pontuacao_total ?? data.pontuacao ?? 0);
+            const max = Number(data.max_score ?? data.pontuacao_max ?? 0);
+            const rounds = Number(data.rounds ?? 0);
+            const nivel = Number(data.nivel ?? (Math.floor(total / 500) + 1));
+
+            return {
+                total_score: Number.isFinite(total) ? total : 0,
+                max_score: Number.isFinite(max) ? max : 0,
+                rounds: Number.isFinite(rounds) ? rounds : 0,
+                nivel: Number.isFinite(nivel) ? nivel : 1
+            };
+        }
+
+        function applyDashboardStatsByGame(gameKey) {
+            const stats = gameStatsCache[gameKey] || defaultStats;
+
+            const pontuacaoEl = document.getElementById('userPontuacao');
+            const nivelEl = document.getElementById('userNivel');
+            const maxEl = document.getElementById('userPontuacaoMax');
+            const roundsEl = document.getElementById('userRounds');
+            const hintEl = document.getElementById('statsGameHint');
+
+            if (pontuacaoEl) pontuacaoEl.textContent = String(stats.total_score ?? 0);
+            if (nivelEl) nivelEl.textContent = String(stats.nivel ?? 1);
+            if (maxEl) maxEl.textContent = String(stats.max_score ?? 0);
+            if (roundsEl) roundsEl.textContent = String(stats.rounds ?? 0);
+
+            if (hintEl) {
+                hintEl.textContent = gameKey === 'dino'
+                    ? 'Exibindo estatísticas do Dino'
+                    : 'Exibindo estatísticas da Forca';
+            }
+        }
+
+        function applyPerfilStatsByGame(gameKey) {
+            const stats = gameStatsCache[gameKey] || defaultStats;
+
+            const perfilPontuacaoEl = document.getElementById('perfilPontuacao');
+            const perfilPontuacaoMaxEl = document.getElementById('perfilPontuacaoMax');
+            const perfilPartidasEl = document.getElementById('perfilPartidas');
+            const perfilNivelEl = document.getElementById('perfilNivel');
+
+            if (perfilPontuacaoEl) perfilPontuacaoEl.textContent = String(stats.total_score ?? 0);
+            if (perfilPontuacaoMaxEl) perfilPontuacaoMaxEl.textContent = String(stats.max_score ?? 0);
+            if (perfilPartidasEl) perfilPartidasEl.textContent = String(stats.rounds ?? 0);
+            if (perfilNivelEl) perfilNivelEl.textContent = `Nível ${stats.nivel ?? 1}`;
+        }
+
+        function syncPerfilGameTabs(gameKey) {
+            document.querySelectorAll('[data-perfil-game]').forEach((btn) => {
+                if (!(btn instanceof HTMLElement)) return;
+
+                const isActive = btn.dataset.perfilGame === gameKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', String(isActive));
+            });
+        }
+
+        function updateStatsCardsLayout(gameKey) {
+            const isForca = gameKey === 'jogo_da_forca';
+
+            const totalCol = document.getElementById('statsCardTotalCol');
+            const maxCol = document.getElementById('statsCardMaxCol');
+            const nivelCol = document.getElementById('statsCardNivelCol');
+            const roundsCol = document.getElementById('statsCardRoundsCol');
+
+            [totalCol, maxCol].forEach((col) => {
+                if (!(col instanceof HTMLElement)) return;
+                col.classList.remove('col-md-3', 'col-md-6');
+                col.classList.add(isForca ? 'col-md-6' : 'col-md-3');
+            });
+
+            [nivelCol, roundsCol].forEach((col) => {
+                if (!(col instanceof HTMLElement)) return;
+                col.classList.toggle('d-none', isForca);
+            });
+        }
+
+        function setActiveStatsGame(gameKey, syncPeers = true) {
+            activeGame = gameKey;
+
+            document.querySelectorAll('[data-stats-game]').forEach((btn) => {
+                if (!(btn instanceof HTMLElement)) return;
+
+                const isActive = btn.dataset.statsGame === gameKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', String(isActive));
+            });
+
+            applyDashboardStatsByGame(gameKey);
+            updateStatsCardsLayout(gameKey);
+            applyPerfilStatsByGame(gameKey);
+            syncPerfilGameTabs(gameKey);
+
+            if (syncPeers) {
+                setActiveRankingGame(gameKey, false);
+                setActiveHistoricoGame(gameKey, false);
+            }
+        }
+
+        async function carregarEstatisticasPorJogo(uid, fallbackDino) {
+            gameStatsCache.dino = normalizeStatsData(fallbackDino);
+
+            try {
+                const dinoSnapshot = await get(ref(db, 'games/dino/usuarios/' + uid));
+                if (dinoSnapshot.exists()) {
+                    gameStatsCache.dino = normalizeStatsData(dinoSnapshot.val());
+                }
+            } catch (error) {
+                console.warn('Sem acesso às estatísticas do Dino em games/dino:', error?.code || error?.message || error);
+            }
+
+            try {
+                const forcaSnapshot = await get(ref(db, 'games/forca/usuarios/' + uid));
+                if (forcaSnapshot.exists()) {
+                    gameStatsCache.jogo_da_forca = normalizeStatsData(forcaSnapshot.val());
+                }
+            } catch (error) {
+                console.warn('Sem acesso às estatísticas da Forca em games/forca:', error?.code || error?.message || error);
+            }
+
+            applyDashboardStatsByGame(activeGame);
+        }
+
+        function initStatsTabs() {
+            document.querySelectorAll('[data-stats-game]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const gameKey = btn.dataset.statsGame;
+                    if (!gameKey) return;
+                    setActiveStatsGame(gameKey);
+                });
+            });
+
+            setActiveStatsGame('dino');
+        }
+
+        initStatsTabs();
+
+        function updateRankingCardsLayout(gameKey) {
+            const isForca = gameKey === 'jogo_da_forca';
+
+            const roundsCol = document.getElementById('rankingCardRoundsCol');
+            const nivelCol = document.getElementById('rankingCardNivelCol');
+            const hintEl = document.getElementById('rankingGameHint');
+
+            document.querySelectorAll('.ranking-rounds-col').forEach((el) => {
+                if (!(el instanceof HTMLElement)) return;
+                el.classList.toggle('hidden-forca', isForca);
+            });
+
+            [roundsCol, nivelCol].forEach((col) => {
+                if (!(col instanceof HTMLElement)) return;
+                col.classList.toggle('d-none', isForca);
+            });
+
+            if (hintEl) {
+                hintEl.textContent = gameKey === 'dino'
+                    ? 'Exibindo ranking do Dino'
+                    : 'Exibindo ranking da Forca';
+            }
+        }
+
+        function setActiveRankingGame(gameKey, syncPeers = true) {
+            activeGame = gameKey;
+
+            document.querySelectorAll('[data-ranking-game]').forEach((btn) => {
+                if (!(btn instanceof HTMLElement)) return;
+
+                const isActive = btn.dataset.rankingGame === gameKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', String(isActive));
+            });
+
+            updateRankingCardsLayout(gameKey);
+
+            if (usuarioAtual) {
+                carregarRanking(usuarioAtual.uid, gameKey);
+            }
+
+            if (syncPeers) {
+                setActiveStatsGame(gameKey, false);
+                setActiveHistoricoGame(gameKey, false);
+            }
+
+            syncPerfilGameTabs(gameKey);
+            applyPerfilStatsByGame(gameKey);
+        }
+
+        function initRankingTabs() {
+            document.querySelectorAll('[data-ranking-game]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const gameKey = btn.dataset.rankingGame;
+                    if (!gameKey) return;
+                    setActiveRankingGame(gameKey);
+                });
+            });
+
+            setActiveRankingGame(activeGame, false);
+        }
+
+        initRankingTabs();
+
+        function setActiveHistoricoGame(gameKey, syncPeers = true) {
+            activeGame = gameKey;
+
+            document.querySelectorAll('[data-historico-game]').forEach((btn) => {
+                if (!(btn instanceof HTMLElement)) return;
+
+                const isActive = btn.dataset.historicoGame === gameKey;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', String(isActive));
+            });
+
+            const hintEl = document.getElementById('historicoGameHint');
+            if (hintEl) {
+                hintEl.textContent = gameKey === 'dino'
+                    ? 'Exibindo histórico do Dino'
+                    : 'Exibindo histórico da Forca';
+            }
+
+            if (usuarioAtual) {
+                carregarHistorico(usuarioAtual.uid, gameKey);
+            }
+
+            if (syncPeers) {
+                setActiveStatsGame(gameKey, false);
+                setActiveRankingGame(gameKey, false);
+            }
+
+            syncPerfilGameTabs(gameKey);
+            applyPerfilStatsByGame(gameKey);
+        }
+
+        function initHistoricoTabs() {
+            document.querySelectorAll('[data-historico-game]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const gameKey = btn.dataset.historicoGame;
+                    if (!gameKey) return;
+                    setActiveHistoricoGame(gameKey);
+                });
+            });
+
+            setActiveHistoricoGame(activeGame, false);
+        }
+
+        initHistoricoTabs();
+
+        function initPerfilTabs() {
+            document.querySelectorAll('[data-perfil-game]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const gameKey = btn.dataset.perfilGame;
+                    if (!gameKey) return;
+                    setActiveStatsGame(gameKey);
+                });
+            });
+
+            syncPerfilGameTabs(activeGame);
+            applyPerfilStatsByGame(activeGame);
+        }
+
+        initPerfilTabs();
 
         // ============================================
         // VERIFICAÇÃO DE AUTENTICAÇÃO
@@ -848,10 +1283,10 @@
             await carregarDadosUsuario(user.uid);
             
             // Carregar ranking em tempo real
-            carregarRanking(user.uid);
+            carregarRanking(user.uid, activeGame);
             
             // Carregar histórico
-            carregarHistorico(user.uid);
+            carregarHistorico(user.uid, activeGame);
 
             // Carregar changelog
             carregarChangelog();
@@ -876,10 +1311,10 @@
                     const partidas = dadosUsuario.rounds || 0;
                     const nivel = dadosUsuario.nivel || 1;
                     console.log(dadosUsuario)
-                    document.getElementById('userPontuacao').textContent = pontuacaoTotal;
-                    document.getElementById('userNivel').textContent = nivel;
-                    document.getElementById('userPontuacaoMax').textContent = pontuacaoMaxima;
-                    document.getElementById('userRounds').textContent = partidas;
+
+                    gameStatsCache.dino = normalizeStatsData(dadosUsuario);
+                    await carregarEstatisticasPorJogo(uid, dadosUsuario);
+                    applyPerfilStatsByGame(activeGame);
 
                     // Avatar
                     const iniciais = dadosUsuario.nome.charAt(0).toUpperCase();
@@ -921,10 +1356,16 @@
         // RANKING EM TEMPO REAL
         // ============================================
         
-        function carregarRanking(userUid) {
-            const rankingRef = ref(db, 'ranking');
+        function carregarRanking(userUid, gameKey = activeGame) {
+            const rankingPath = gameKey === 'jogo_da_forca' ? 'games/forca/ranking' : 'ranking';
+            const rankingRef = ref(db, rankingPath);
 
-            onValue(rankingRef, (snapshot) => {
+            if (currentRankingRef && currentRankingListener) {
+                off(currentRankingRef, 'value', currentRankingListener);
+            }
+
+            currentRankingRef = rankingRef;
+            currentRankingListener = (snapshot) => {
                 const rankingMaxBody = document.getElementById('rankingMaxBody');
                 const rankingTotalBody = document.getElementById('rankingTotalBody');
                 const rankingRoundsBody = document.getElementById('rankingRoundsBody');
@@ -940,8 +1381,14 @@
                                 Nenhum jogador no ranking ainda!
                             </td>
                         </tr>`;
-                    rankingMaxBody.innerHTML = emptyState;
-                    rankingTotalBody.innerHTML = emptyState;
+                    const emptyStateForca = `
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                Nenhum jogador no ranking ainda!
+                            </td>
+                        </tr>`;
+                    rankingMaxBody.innerHTML = gameKey === 'jogo_da_forca' ? emptyStateForca : emptyState;
+                    rankingTotalBody.innerHTML = gameKey === 'jogo_da_forca' ? emptyStateForca : emptyState;
                     rankingRoundsBody.innerHTML = emptyState;
                     rankingNivelBody.innerHTML = emptyState;
                     return;
@@ -1043,6 +1490,9 @@
                         const nomeComPrivacidade = (item.uid === userUid && item.mostrar_no_ranking === false)
                             ? `${nomeBase} <span class="ranking-private-label">(Privado)</span>`
                             : nomeBase;
+                        const roundsCell = gameKey === 'jogo_da_forca'
+                            ? ''
+                            : `<td class="ranking-rounds-col"><strong>${item.rounds}</strong></td>`;
 
                         if (tipo === 'rounds') {
                             html += `
@@ -1073,7 +1523,7 @@
                                 <td>${medal}</td>
                                 <td>${nomeComPrivacidade}</td>
                                 <td><strong>${pontuacao}</strong></td>
-                                <td><strong>${item.rounds}</strong></td>
+                                ${roundsCell}
                             </tr>
                         `;
                     });
@@ -1085,21 +1535,36 @@
                 rankingTotalBody.innerHTML = gerarLinhas(listaTotal, 'total');
                 rankingRoundsBody.innerHTML = gerarLinhas(listaRounds, 'rounds');
                 rankingNivelBody.innerHTML = gerarLinhas(listaNivel, 'nivel');
-            });
+            };
+
+            onValue(rankingRef, currentRankingListener);
         }
 
         // ============================================
         // HISTÓRICO DE PARTIDAS
         // ============================================
 
-        async function carregarHistorico(uid) {
+        async function carregarHistorico(uid, gameKey = activeGame) {
             try {
                 const historicoBody = document.getElementById('historicoBody');
                 const historicoMini = document.getElementById('historicoPartidas');
                 if (!historicoBody) return;
 
-                const historicoRef = ref(db, 'historico/' + uid);
-                const snapshot = await get(query(historicoRef, orderByKey(), limitToLast(15)));
+                let snapshot = null;
+
+                if (gameKey === 'jogo_da_forca') {
+                    const historicoRefForca = ref(db, 'games/forca/historico/' + uid);
+                    snapshot = await get(query(historicoRefForca, orderByKey(), limitToLast(15)));
+                } else {
+                    const historicoRefDino = ref(db, 'games/dino/historico/' + uid);
+                    snapshot = await get(query(historicoRefDino, orderByKey(), limitToLast(15)));
+
+                    // Fallback para estrutura legada do dino.
+                    if (!snapshot.exists()) {
+                        const historicoRefLegacy = ref(db, 'historico/' + uid);
+                        snapshot = await get(query(historicoRefLegacy, orderByKey(), limitToLast(15)));
+                    }
+                }
 
                 if (!snapshot.exists()) {
                     historicoBody.innerHTML = `
@@ -1388,7 +1853,11 @@
                 }
 
                 if (section === 'historico' && usuarioAtual) {
-                    carregarHistorico(usuarioAtual.uid);
+                    setActiveHistoricoGame(activeGame);
+                }
+
+                if (section === 'ranking') {
+                    setActiveRankingGame(activeGame);
                 }
 
                 if (section === 'changelog') {
@@ -1534,7 +2003,7 @@
         // Botão atualizar ranking
         document.getElementById('btnAtualizarRanking').addEventListener('click', () => {
             if (usuarioAtual) {
-                carregarRanking(usuarioAtual.uid);
+                carregarRanking(usuarioAtual.uid, activeGame);
             }
         });
 
@@ -1594,7 +2063,7 @@
                     }
 
                     if (usuarioAtual) {
-                        carregarRanking(usuarioAtual.uid);
+                        carregarRanking(usuarioAtual.uid, activeGame);
                     }
                 } catch (error) {
                     console.error('Erro ao salvar configuração de privacidade:', error);
@@ -1723,7 +2192,7 @@
 
                     limparHistoricoModal.hide();
                     alert('Seu histórico foi limpo com sucesso!');
-                    carregarHistorico(uid);
+                    carregarHistorico(uid, activeGame);
                 } catch (error) {
                     console.error('Erro ao limpar histórico:', error);
                     const erroLimpeza = error?.code || error?.message || 'erro_desconhecido';
@@ -1735,13 +2204,13 @@
         // botão atualizar
         document.getElementById('btnAtualizarHistorico').addEventListener('click', () => {
             if (usuarioAtual) {
-                carregarHistorico(usuarioAtual.uid);
+                carregarHistorico(usuarioAtual.uid, activeGame);
             }
         });
         // botão histórico
         document.querySelector("a[data-section=\"historico\"]").addEventListener('click', () => {
             if (usuarioAtual) {
-                carregarHistorico(usuarioAtual.uid);
+                setActiveHistoricoGame(activeGame);
             }
         });
 

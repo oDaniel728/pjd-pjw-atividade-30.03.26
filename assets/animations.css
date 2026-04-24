@@ -29,3 +29,20 @@
         transform: rotate(var(--end));
     }
 }
+
+.an-heartbeat {
+    --scale-start: 1;
+    --scale-end: 1.2;
+    animation: heartbeat var(--duration) infinite;
+}
+@keyframes heartbeat {
+    0%, 100% {
+        transform: scale(var(--scale-start));
+    }
+    10% {
+        transform: scale(var(--scale-end));
+    }
+    20% {
+        transform: scale(var(--scale-start));
+    }
+}
